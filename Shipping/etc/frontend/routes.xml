@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/App/etc/routes.xsd">
+    <router id="standard">
+        <route id="aramexcalculator" frontName="aramexcalculator">
+            <module name="Aramex_Shipping" />
+        </route>
+        <route id="apilocationvalidator" frontName="apilocationvalidator">
+            <module name="Aramex_Shipping" />
+        </route>
+    </router>
+</config>

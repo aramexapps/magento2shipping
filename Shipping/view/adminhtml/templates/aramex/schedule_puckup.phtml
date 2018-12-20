@@ -1,0 +1,514 @@
+<?php 
+/**
+ * Description:  Aramex Shipping Magento2 plugin
+ * Version:      1.0.0
+ * Author:       aramex.com
+ * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
+ * License:      GPL2
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+*/
+?>
+<?php
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$scopeConfig = $objectManager->create('\Magento\Framework\App\Config\ScopeConfigInterface');
+$_order = $objectManager->create('Magento\Sales\Model\Order')->load($this->order_id);
+$country = $scopeConfig->getValue('aramex/shipperdetail/country', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$phone = $scopeConfig->getValue('aramex/shipperdetail/phone', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$company = $scopeConfig->getValue('aramex/shipperdetail/company', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$city = $scopeConfig->getValue('aramex/shipperdetail/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$postalcode = $scopeConfig->getValue('aramex/shipperdetail/postalcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$address = $scopeConfig->getValue('aramex/shipperdetail/address', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$contact = $scopeConfig->getValue('aramex/shipperdetail/name', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$email = $scopeConfig->getValue('aramex/shipperdetail/email', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+?>
+<?php $shipping = $_order->getShippingAddress(); ?>
+<?php
+//calculating total weight of current order
+$state = "";
+if ($shipping != null) {
+    if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $state = $region->getName();
+    } else {
+        $state = $shipping->getData('region');
+    }
+
+    $billing_state = "";
+    if ($shipping->getData('region_id')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $billing_state = $region->getName();
+    } else {
+        $billing_state = $shipping->getData('region');
+    }
+}
+$totalWeight = 0;
+$itemscount = 0;
+$itemsv = $_order->getAllVisibleItems();
+foreach ($itemsv as $itemvv) {
+    if ($itemvv->getQtyOrdered() > $itemvv->getQtyShipped()) {
+        $itemscount += $itemvv->getQtyOrdered() - $itemvv->getQtyShipped();
+    } elseif ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
+        $itemscount += $itemvv->getQtyShipped();
+    }
+    if ($itemvv->getWeight() != 0) {
+        $weight = $itemvv->getWeight() * $itemvv->getQtyOrdered();
+    } else {
+        $weight = 0.5 * $itemvv->getQtyOrdered();
+    }
+    $totalWeight += $weight;
+}
+?>
+
+<script type="text/javascript">
+    require(['jquery', 'jquery/ui'], function ($) {
+        function ZipValidateUpdter(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls) {
+            this.country_ele = country_ele;
+            this.city_ele = city_ele;
+            this.zip_ele = zip_ele;
+            this.required_cls = required_cls;
+            this.optionalZipCountries = optionalZipCountries;
+        }
+        ZipValidateUpdter.prototype.checkoptions = function () {
+            var country_code = $("#" + this.country_ele).val();
+            /*alert(this.country_ele+' '+country_code);*/
+            if (typeof this.optionalZipCountries == 'undefined') {
+                return false;
+            }
+            $('.validation-advice').hide();
+            if (this.optionalZipCountries.indexOf(country_code) != -1) {
+                $("#" + this.zip_ele).removeClass(this.required_cls);
+                $("#" + this.zip_ele).parent('div').find('.red').addClass('no-display');
+                $("#" + this.city_ele).addClass(this.required_cls);
+                $("#" + this.city_ele).parent('div').find('.red').removeClass('no-display');
+            } else {
+                $("#" + this.zip_ele).addClass(this.required_cls);
+                $("#" + this.zip_ele).parent('div').find('.red').removeClass('no-display');
+                $("#" + this.city_ele).parent('div').find('.red').addClass('no-display');
+                $("#" + this.city_ele).removeClass(this.required_cls);
+            }
+
+        }
+        function zipValidateMaker(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls) {
+            return new ZipValidateUpdter(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls);
+        }
+        <?php
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance(); ?>
+        optionalZipCountries = <?php echo $objectManager->get('Magento\Directory\Helper\Data')->getCountriesWithOptionalZip(true); ?>;
+        var pickup_country_map = zipValidateMaker('pickup_country', 'pickup_zip', 'pickup_city', optionalZipCountries, 'required-entry');
+        <?php
+        $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
+        $isSecure = $storeManager->getStore()->isCurrentlySecure();
+        ?>
+        var new_system_base_url = "<?php echo $block->escapeJs($block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB, $isSecure)));?>";
+        $(function () {
+            pickup_country_map.checkoptions();
+            var country_param_origin = $(".pickup-form #pickup_country").val();
+            $(".schedule-pickup-part #pickup_country").change(function () {
+                country_param_origin = this.value;
+            });
+
+            $('#pickup_city').autocomplete({
+                source: function (request, response) {
+                    $('.loading-mask').css('display', 'block');
+                    $.ajax({
+                        url: new_system_base_url + "apilocationvalidator/index/searchautocities",
+                        type: "POST",
+                        dataType: 'json',
+                        data: {
+                            term: request.term,
+                            country_code: country_param_origin,
+                            form_key: window.FORM_KEY
+                        },
+                        success: function (data) {
+                            $('.loading-mask').css('display', 'none');
+                            response(data);
+                        },
+                        error: function (response) {
+                            $('.loading-mask').css('display', 'none');
+                        },
+                    });
+                },
+                minLength: 3,
+                select: function (event, ui) {
+                    var test = ui.item ? ui.item.id : 0;
+                    if (test > 0) {
+                        alert(test);
+                    }
+                },
+                messages: {
+                    noResults: '',
+                    results: function () {
+                    }
+                }
+            }).autocomplete("widget").addClass("ui-autocomplete_aramex");
+        });
+
+    });
+</script>
+<div ng-hide="isAuthLoadingComplete" class="loading-mask ng-scope" data-role="loader" style="display:none;">
+    <div class="popup popup-loading">
+        <div class="popup-inner">
+            Please wait...
+        </div>
+    </div>
+</div>
+
+<div class="schedule-pickup-part">
+    <div class="pickup-form">
+        <form method="post" action="<?php echo $block->escapeUrl($this->getUrl('aramexshipment/index/schedulepickup')); ?>"
+              id="pickup-form">
+            $this->order_id
+            <input type="hidden" name="order_id" value="<?php echo $this->order_id; ?>"/>
+            <FIELDSET>
+                <legend style="font-weight:bold; padding:0 5px;">Schedule Pickup</legend>
+                <div class="fields mar-5">
+                    <h3>Pickup Details</h3>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Location:</label>
+                            <input type="text" readonly="readonly" name="pickup[location]" id="pickup_location"
+                                   value="Reception"/>
+                        </div>
+                        <div class="field fl">
+                            <label>Vehicle Type:</label>
+                            <select name="pickup[vehicle]" id="pickup_vehicle">
+                                <option value="Bike">Small (no specific vehicle required)</option>
+                                <option value="Car">Medium (regular car or small van)</option>
+                                <option value="Truck">Large (large van or truck required)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Date: <span class="red">*</span></label>
+                            <input type="text" readonly="readonly" name="pickup[date]" id="pickup_date" value=""
+                                   class="width-150 fl"/>
+                        </div>
+                        <div class="field fl">
+
+                            <label>Ready Time: <span class="red">*</span></label>
+                            <select name="pickup[ready_hour]" class="width-60 fl" id="ready_hour">
+                                <?php $time = date("H", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp());
+
+                                ?>
+                                <?php for ($i = 7; $i < 20; $i++): ?>
+                                    <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
+                                    <option
+                                        value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $i) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select name="pickup[ready_minute]" class="width-60 fl mar-lf-10" id="ready_minute">
+                                <?php $time = date("i", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
+                                <?php for ($i = 0; $i <= 55; $i = $i + 5): ?>
+                                    <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
+                                    <option
+                                        value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <div class="clearfix"></div>
+                        </div>
+
+                        <div class="field fl mar-lf-10">
+                            <label>Closing Time: <span class="red">*</span></label>
+                            <select name="pickup[latest_hour]" class="width-60 fl" id="latest_hour">
+                                <?php $time = date("H", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
+                                <?php $time = $time + 1; ?>
+                                <?php for ($i = 7; $i < 20; $i++): ?>
+                                    <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
+                                    <option
+                                        value="<?php echo $block->escapeHtmlAttr($val) ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <select name="pickup[latest_minute]" class="width-60 fl mar-lf-10" id="latest_minute">
+                                <?php $time = date("i", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
+                                <?php for ($i = 0; $i <= 55; $i = $i + 5): ?>
+                                    <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
+                                    <option
+                                        value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
+                                <?php endfor; ?>
+                            </select>
+                            <div class="clearfix"></div>
+
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Reference 1:</label>
+                            <input type="text" name="pickup[reference]" id="pickup_reference"
+                                   value="<?php echo $block->escapeHtmlAttr($_order->getIncrementId()); ?>"/>
+                        </div>
+                        <div class="field fl">
+                            <label>Status: <span class="red">*</span></label>
+                            <select name="pickup[status]" id="pickup_status">
+                                <option value="Ready">Ready</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Product Group: <span class="red">*</span></label>
+                            <select name="pickup[product_group]" id="product_group">
+                                <option <?php if ($shipping) {
+                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $country) ? 'selected="selected"' : '');
+                                } ?> value="DOM">Domestic
+                                </option>
+                                <option <?php if ($shipping) {
+                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') != $country) ? 'selected="selected"' : '');
+                                } ?> value="EXP">International Express
+                                </option>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>Product Type: <span class="red">*</span></label>
+                            <select name="pickup[product_type]" class="fl" id="product_type">
+                                <?php
+                                $allowed_domestic_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                                $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                                $domestic_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods')->toOptionArray();
+                                $international_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Internationalmethods')->toOptionArray();
+                                $shipperdetail_country = $country;
+                                $shipping_country = is_object($shipping) ? $shipping->getData('country_id') : '';
+                                ?>
+                                <?php if (count($allowed_domestic_methods) > 0) {
+                                    $i = 1;
+                                    foreach ($domestic_methods as $key => $val) {
+                                        if (in_array($val['value'], $allowed_domestic_methods)) {
+                                            ?>
+                                            <option <?php echo $block->escapeHtmlAttr(($i == 1 and $shipping_country == $shipperdetail_country) ? 'selected="selected"' : ''); ?>
+                                                value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="calc_<?php echo $block->escapeHtmlAttr($val['value']); ?>" class="local DOM">
+                                                <?php echo $block->escapeHtml($val['label']); ?></option>
+                                            <?php
+                                            $i++;
+                                        }
+                                    }
+                                } ?>
+                                <?php if (count($allowed_international_methods) > 0) {
+                                    $i = 1;
+                                    foreach ($international_methods as $key => $val) {
+                                        if (in_array($val['value'], $allowed_international_methods)) {
+                                            ?>
+                                            <option <?php echo $block->escapeHtmlAttr(($i == 1 and $shipping_country != $shipperdetail_country) ? 'selected="selected"' : ''); ?>
+                                                value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="calc_<?php echo $block->escapeHtmlAttr($val['value']); ?>" class="non-local EXP">
+                                                <?php echo $block->escapeHtmlAttr($val['label']); ?></option>
+                                            <?php
+                                            $i++;
+                                        }
+                                    }
+                                } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Payment Type: <span class="red">*</span></label>
+                            <select name="pickup[payment_type]">
+                                <option value="P">Prepaid</option>
+                                <option value="C">Collect</option>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>Weight <span class="red">*</span></label>
+                            <div>
+                                <input type="text" name="pickup[text_weight]" class="fl mar-right-10 width-60"
+                                       value="<?php echo $block->escapeHtmlAttr(number_format($totalWeight, 2)); ?>"/>
+                                <select name="pickup[weight_unit]" class="fl width-60">
+                                    <option value="KG">KG</option>
+                                    <option value="LB">LB</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label class="width-150">Number of Pieces: <span class="red">*</span></label>
+                            <input class="requried-entry" type="text" name="pickup[no_pieces]" id="pickup_no_pieces"
+                                   value="<?php echo $itemscount; ?>"/>
+                        </div>
+                        <div class="field fl">
+                            <label class="width-150">Number of Shipments: <span class="red">*</span></label>
+                            <input type="text" name="pickup[no_shipments]" class="requried-entry"
+                                   id="pickup_no_shipments" value="1"/>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="fields mar-10">
+                    <h3>Address Information</h3>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Company: <span class="red">*</span></label>
+                            <input type="text" name="pickup[company]" id="pickup_company"
+                                   value="<?php echo $block->escapeHtmlAttr($company); ?>"/>
+                        </div>
+                        <div class="field fl">
+                            <label>Contact: <span class="red">*</span></label>
+                            <input type="text" name="pickup[contact]" class="requried-entry" id="pickup_contact"
+                                   value="<?php echo $block->escapeHtmlAttr($contact); ?>"/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Phone: <span class="red">*</span></label>
+                            <input type="text" name="pickup[phone]" id="pickup_phone" class="requried-entry"
+                                   value="<?php echo $block->escapeHtmlAttr($phone); ?>"/>
+                        </div>
+                        <div class="field fl">
+                            <label>Extension:</label>
+                            <input type="text" name="pickup[ext]" id="pickup_ext" value=""/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field">
+                            <label>Mobile: <span class="red">*</span></label>
+                            <input type="text" name="pickup[mobile]" id="pickup_mobile" value="<?php echo $block->escapeHtmlAttr($phone); ?>"
+                                   class="width-full required-entry"/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field">
+                            <label>Address: <span class="red">*</span></label>
+                            <input type="text" name="pickup[address]" id="pickup_address" value="<?php echo $block->escapeHtmlAttr($address); ?>"
+                                   class="width-full required-entry"/>
+                        </div>
+                    </div>
+                    <?php
+                    $_countries = $objectManager->create('Magento\Directory\Model\Config\Source\Country')->toOptionArray();
+                    ?>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>Country: <span class="red">*</span></label>
+                            <select name="pickup[country]" id="pickup_country">
+                                <?php if (count($_countries) > 0): ?>
+                                    <?php foreach ($_countries as $_country): ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>" <?php if ($shipping) {
+                        echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
+                    } ?>>
+                                            <?php echo $block->escapeHtml($_country['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>State/Prov:</label>
+                            <input type="text" name="pickup[state]" id="pickup_state" value=""/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field fl width-270">
+                            <label>City: <span class="red no-display">*</span></label>
+                            <input type="text" name="pickup[city]" id="pickup_city" autocomplete="off"
+                                   value="<?php echo $block->escapeHtmlAttr($city); ?>"/>
+                            <div id="pickup_city_autocomplete" class="am_autocomplete"></div>
+                        </div>
+                        <div class="field fl">
+                            <label>Post Code: <span class="red no-display">*</span></label>
+                            <input type="text" name="pickup[zip]" id="pickup_zip" class=" required-entry"
+                                   value="<?php echo $block->escapeHtmlAttr($postalcode); ?>"/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field">
+                            <label>Email: <span class="red">*</span></label>
+                            <input type="text" name="pickup[email]" id="pickup_email" value="<?php echo $block->escapeHtmlAttr($email); ?>"
+                                   class="width-full required-entry"/>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-5">
+                        <div class="field">
+                            <label>Comments:</label>
+                            <input type="text" name="pickup[comments]" id="pickup_comments" value=""
+                                   class="width-full"/>
+                        </div>
+                    </div>
+                    <div class="cal-button-part">
+                        <button name="aramex_pickup_submit" type="button" id="aramex_pickup_submit">Submit</button>
+                        <button type="button" onclick="myObj.close()">Close</button>
+                        <span class="mar-lf-10 red">* are required fields</span>
+                        <input type="hidden" value="<?php echo $block->escapeHtmlAttr($this->getRequest()->getParam('order_id')); ?>"
+                               name="pickup[order_id]"/>
+                    </div>
+                    <div class="pickup-result mar-10">
+                        <h3>Result</h3>
+                        <div class="pickup-res mar-10"></div>
+                    </div>
+                </div>
+            </FIELDSET>
+        </form>
+        <script type="text/javascript">
+            require(['jquery', 'jquery/ui', 'chained'], function ($) {
+                $("#product_type").chained("#product_group");
+                var H = '<?php echo $block->escapeJs(date("H", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp())); ?>';
+                var M = '<?php echo $block->escapeJs(date("i", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp())); ?>';
+                var D = '<?php echo $block->escapeJs(date("m/d/Y", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp())); ?>';
+                $(document).ready(function () {
+                    $('#pickup_date').datepicker({
+                        dateFormat: 'mm/dd/yy'
+                    });
+                    $('#aramex_pickup_submit').click(function () { // The button type should be "button" and not submit
+
+                        if ($('#pickup-form').validate({}
+                            )) {
+                            var rH = $('#ready_hour').val();
+                            var lH = $('#latest_hour').val();
+                            var rM = $('#ready_minute').val();
+                            var lM = $('#latest_minute').val();
+                            var error = false;
+                            var rDate = $('#pickup_date').val();
+                            if (rDate == '' || rDate == null) {
+                                alert("Pickup Date should not empty");
+                                return;
+                            }
+                            rDate = rDate.split("/");
+                            cDate = D.split("/");
+                            var isCheckTime = false;
+
+                            if (rDate[2] < cDate[2]) {
+                                error = true;
+                            } else if (rDate[2] == cDate[2]) {
+                                if (rDate[0] < cDate[0]) {
+                                    error = true;
+                                } else if (rDate[0] == cDate[0]) {
+                                    if (rDate[1] < cDate[1]) {
+                                        error = true;
+                                    } else if (rDate[1] == cDate[1]) {
+                                        if (rH < H) {
+                                            alert("Ready Time should be greater than Current Time");
+                                            return;
+                                        } else if (rH == H && rM < M) {
+                                            alert("Ready Time should be greater than Current Time");
+                                            return;
+                                        }
+                                        isCheckTime = true;
+                                    }
+                                }
+                            }
+                            if (error) {
+                                alert("Pickup Date should be greater than Current Date");
+                                return;
+                            }
+                            if (isCheckTime) {
+                                if (lH < rH) {
+                                    error = true;
+                                } else if (lH <= rH && lM <= rM) {
+                                    error = true;
+                                }
+                                if (error) {
+                                    alert("Closing Time always greater than Ready Time");
+                                    return;
+                                }
+                            }
+                            if ($("#pickup-form").valid()) {
+                                myObj.schedulePickup();
+                            }
+                            return false;
+                        }
+                    });
+                });
+            });
+        </script>
+    </div>
+</div>

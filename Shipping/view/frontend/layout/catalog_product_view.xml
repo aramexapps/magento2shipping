@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<body>
+    <referenceContainer name="product.info.extrahint">
+        <block class="Aramex\Shipping\Catalog\Block\Product\View\Index"
+            name="product.view.index"
+            template="Aramex_Shipping::product/view/index.phtml"
+            after="-">
+        </block>
+    </referenceContainer>
+</body>

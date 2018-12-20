@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2016 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+   <head>
+   	   <link src="Aramex_Shipping::js/location_validator.js"/>
+       <css src="Aramex_Shipping::css/aramex.css"/>
+       <css src="Aramex_Shipping::css/aramexcalculator.css"/>
+   </head>
+   <body>
+       <referenceBlock name="head.additional">
+            <block class="Magento\Framework\View\Element\Template" name="atwix_testblock" template="Aramex_Shipping::apilocationvalidator/js.phtml" />
+       </referenceBlock>
+   </body> 
+</page>

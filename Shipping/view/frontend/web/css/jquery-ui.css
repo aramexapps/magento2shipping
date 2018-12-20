@@ -1,0 +1,13 @@
+.catalog-product-view .ui-autocomplete{
+    background: white;
+    border:1px solid #ccc;
+    width:250px;
+    list-style: none;
+    margin-left:0px;
+    padding-left:10px;
+
+}
+.catalog-product-view .ui-autocomplete li a{
+    color:black;
+    cursor:pointer;
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2016 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="admin">
+        <route id="aramexcalculator" frontName="aramexcalculator">
+            <module name="Aramex_Shipping" before="Magento_Backend" />
+        </route>
+        <route id="aramexshipment" frontName="aramexshipment">
+            <module name="Aramex_Shipping" before="Magento_Backend" />
+        </route>
+        <route id="apilocationvalidator" frontName="apilocationvalidator">
+            <module name="Aramex_Shipping" before="Magento_Backend" />
+        </route>
+    </router>
+</config>

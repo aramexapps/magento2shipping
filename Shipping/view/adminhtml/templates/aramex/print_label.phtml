@@ -1,0 +1,30 @@
+<?php 
+/**
+ * Description:  Aramex Shipping Magento2 plugin
+ * Version:      1.0.0
+ * Author:       aramex.com
+ * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
+ * License:      GPL2
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+*/
+?>
+<script>
+    require([ 'jquery'], function($){
+$('body').on('mouseover','.note-list-comment a',function(){
+      $(this).css('cursor', 'pointer');
+
+}); 
+
+$('body').on('click','.note-list-comment a',function(e){
+      e.preventDefault();
+      $(this).css('cursor', 'pointer');
+            var thisdata = $(this).text().substring(13);
+            var current = $(this).parent().text().split('.');
+            var current1 = current[2].split(' ');
+            var printLabelUrl =  "<?php echo $block->escapeJs($block->escapeUrl($this->getUrl('aramexshipment/index/printlabel/'))); ?>" + "order_id/" + current1[1] ;
+            setLocation(printLabelUrl + '/print_label_id/' + thisdata );
+
+});   
+       
+    });
+</script>

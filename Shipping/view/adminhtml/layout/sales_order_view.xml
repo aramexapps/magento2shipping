@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+<body>
+    <referenceBlock name="head.components">
+        <block class="Aramex\Shipping\Block\Adminhtml\Order\View" name="aramex.shipment" template="aramex/shipment.phtml" />
+        <block class="Aramex\Shipping\Block\Adminhtml\Order\View" name="aramex.rate" template="aramex/calculate_rate.phtml" />
+        <block class="Aramex\Shipping\Block\Adminhtml\Order\View" name="aramex.schedule" template="aramex/schedule_puckup.phtml" />
+    </referenceBlock>
+</body>
+</page>
+
+

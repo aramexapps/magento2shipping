@@ -1,0 +1,441 @@
+<?php 
+/**
+ * Description:  Aramex Shipping Magento2 plugin
+ * Version:      1.0.0
+ * Author:       aramex.com
+ * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
+ * License:      GPL2
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+*/
+?>
+<?php
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$scopeConfig = $objectManager->create('\Magento\Framework\App\Config\ScopeConfigInterface');
+$_order = $objectManager->create('Magento\Sales\Model\Order')->load($this->order_id);
+?>
+<?php
+$shipping = $_order->getShippingAddress();
+$country = $scopeConfig->getValue('aramex/shipperdetail/country', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$city = $scopeConfig->getValue('aramex/shipperdetail/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$postalcode = $scopeConfig->getValue('aramex/shipperdetail/postalcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$state = $scopeConfig->getValue('aramex/shipperdetail/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$phone = $scopeConfig->getValue('aramex/shipperdetail/phone', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$flag = $scopeConfig->getValue('aramex/config/sandbox_flag', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+?>
+
+<?php
+//calculating total weight of current order
+$state = "";
+if($shipping != null){
+if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
+    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+    $state = $region->getName();
+} else {
+    $state = $shipping->getData('region');
+}
+
+$billing_state = "";
+if ($shipping->getData('region_id')) {
+    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+    $billing_state = $region->getName();
+} else {
+    $billing_state = $shipping->getData('region');
+}
+}
+$totalWeight = 0;
+$itemscount = 0;
+$itemsv = $_order->getAllVisibleItems();
+
+foreach ($itemsv as $itemvv) {
+    if ($itemvv->getQtyOrdered() > $itemvv->getQtyShipped()) {
+        $itemscount += $itemvv->getQtyOrdered() - $itemvv->getQtyShipped();
+    } else if ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
+        $itemscount += $itemvv->getQtyShipped();
+    }
+    if ($itemvv->getWeight() != 0) {
+        $weight = $itemvv->getWeight() * $itemvv->getQtyOrdered();
+    } else {
+        $weight = 0.5 * $itemvv->getQtyOrdered();
+    }
+    $totalWeight += $weight;
+}
+?>
+<script type="text/javascript">
+require([ 'jquery', 'jquery/ui'], function($){
+    
+                /* prototype for  Zip code validate */
+            function ZipValidateUpdter(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls) {
+                this.country_ele = country_ele;
+                this.city_ele = city_ele;
+                this.zip_ele = zip_ele;
+                this.required_cls = required_cls;
+                this.optionalZipCountries = optionalZipCountries;
+            }
+            ZipValidateUpdter.prototype.checkoptions = function () {
+                var country_code = $("#" + this.country_ele).val();
+                /*alert(this.country_ele+' '+country_code);*/
+                if (typeof this.optionalZipCountries == 'undefined') {
+                    return false;
+                }
+
+                $('.validation-advice').hide();
+                if (this.optionalZipCountries.indexOf(country_code) != -1) {
+                    $("#" + this.zip_ele).removeClass(this.required_cls);
+                    $("#" + this.zip_ele).parent('div').find('.red').addClass('no-display');
+                    $("#" + this.city_ele).addClass(this.required_cls);
+                    $("#" + this.city_ele).parent('div').find('.red').removeClass('no-display');
+                } else {
+                    $("#" + this.zip_ele).addClass(this.required_cls);
+                    $("#" + this.zip_ele).parent('div').find('.red').removeClass('no-display');
+                    $("#" + this.city_ele).parent('div').find('.red').addClass('no-display');
+                    $("#" + this.city_ele).removeClass(this.required_cls);
+                }
+
+            }
+            function zipValidateMaker(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls) {
+                return new ZipValidateUpdter(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls);
+            }
+    
+    
+    
+    
+<?php  $objectManager = \Magento\Framework\App\ObjectManager::getInstance(); ?>
+optionalZipCountries = <?php echo $objectManager->get('Magento\Directory\Helper\Data')->getCountriesWithOptionalZip(true); ?>;
+
+var origin_country_map = zipValidateMaker('origin_country','origin_zipcode','origin_city',optionalZipCountries,'required-entry');
+var destination_country_map = zipValidateMaker('destination_country','destination_zipcode','destination_city',optionalZipCountries,'required-entry');
+<?php 
+    $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
+    $isSecure = $storeManager->getStore()->isCurrentlySecure();
+?>
+var  new_system_base_url = "<?php echo $block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB,$isSecure));?>";
+$(function(){
+    	$("#aramex_rate_calculate").click(function(){
+		$('.arm_country').trigger('change');
+	});
+        
+    origin_country_map.checkoptions();
+	destination_country_map.checkoptions();
+        
+        var country_param_origin = $("#origin_country").val();
+         $("#origin_country").change(function(){
+           country_param_origin = this.value;
+         });
+        $('#origin_city').autocomplete({
+            source: function(request, response){
+                $('.loading-mask').css('display','block');
+                 $.ajax({
+                    url: new_system_base_url+"apilocationvalidator/index/searchautocities",
+                    type: "POST",
+                    dataType: 'json',
+                    data:{
+                        term: request.term, 
+                        country_code: country_param_origin, 
+                        form_key: window.FORM_KEY
+                    },
+                    success: function(data){
+                        $('.loading-mask').css('display','none');
+                        response(data);
+                    }, 
+                    error: function (response) {
+                    $('.loading-mask').css('display','none');
+            },
+                });
+            },
+            minLength: 3, 
+            select: function (event, ui)
+            {
+                var test = ui.item ? ui.item.id : 0;
+                if (test > 0)
+                {
+                   alert(test);
+                }
+            },
+            messages: {
+                    noResults: '',
+                    results: function() {}
+                }
+        }).autocomplete( "widget" ).addClass("ui-autocomplete_aramex");
+        
+         var country_param_destination = $(".arm_country").val();
+         $( "#destination_country" ).change(function(){
+           country_param_destination = this.value;
+          
+         });
+          
+         $('#destination_city').autocomplete({
+            source: function(request, response){
+                $('.loading-mask').css('display','block');
+                 $.ajax({
+                    url: new_system_base_url+"apilocationvalidator/index/searchautocities",
+                    type: "POST",
+                    dataType: 'json',
+                    data:{
+                        term: request.term, 
+                        country_code: country_param_destination, 
+                        form_key: window.FORM_KEY
+                    },
+                    success: function(data){
+                        $('.loading-mask').css('display','none');
+                          response(data);
+                    }, 
+                    error: function (response) {
+                    $('.loading-mask').css('display','none');
+            },
+                });
+            },
+            minLength: 3, 
+            select: function (event, ui)
+            {
+                var test = ui.item ? ui.item.id : 0;
+                if (test > 0)
+                {
+                   alert(test);
+                }
+            },
+            messages: {
+                    noResults: '',
+                    results: function() {}
+                }
+        }).autocomplete( "widget" ).addClass("ui-autocomplete_aramex");       
+});
+  });
+</script>  
+<div ng-hide="isAuthLoadingComplete" class="loading-mask ng-scope" data-role="loader" style="display:none;">
+    <div class="popup popup-loading">
+        <div class="popup-inner">
+            Please wait...
+        </div>
+    </div>
+</div>
+<div class="back-over"></div>
+<div class="cal-rate-part">
+    <div class="cal-form">
+        <form method="post" action="<?php echo $block->escapeUrl($this->getUrl('aramexshipment/index/rate')); ?>" id="calc-rate-form">
+             <input name="form_key" type="hidden" value="<?php echo $this->getFormKey() ?>"/>
+            <FIELDSET>
+                <legend style="font-weight:bold; padding:0 5px;">Calculate Rates</legend>
+                <div class="fields mar-10">
+                    <h3>Shipment Origin</h3>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Country <span class="red">*</span></label>
+                            <?php
+                            $_countries = $objectManager->create('Magento\Directory\Model\Config\Source\Country')->toOptionArray();
+                            ?>
+                            <select name="origin_country" class="arm_country" id="origin_country">
+                                <?php if (count($_countries) > 0): ?>
+                                    <?php foreach ($_countries as $_country): ?>
+                                        <option value="<?php echo $_country['value'] ?>" <?php if ($country) {
+                                    echo ($country == $_country['value']) ? "selected='selected'" : '' ;
+                                } ?>>
+                                        <?php echo $block->escapeHtml($_country['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>City <span class="red no-display">*</span></label>
+                            <input type="text" name="origin_city" id="origin_city" value="<?php echo $block->escapeHtmlAttr($city); ?>" />
+                            <div id="origin_city_autocomplete" class="am_autocomplete"></div>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Zip code <span class="red no-display">*</span></label>
+                            <input type="text" name="origin_zipcode"  id="origin_zipcode" value="<?php echo $block->escapeHtmlAttr($postalcode); ?>" />
+                        </div>
+                        <div class="field fl">
+                            <label>State / Province</label>
+                            <input type="text" name="origin_state" id="origin_state" value="<?php echo $block->escapeHtmlAttr($state); ?>"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="fields mar-10">
+                    <h3>Shipment Destination</h3>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Country <span class="red">*</span></label> 
+                            <select name="destination_country" class="arm_country" id="destination_country" >
+                                <?php if (count($_countries) > 0): ?>
+                                        <?php foreach ($_countries as $_country): ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>"  <?php if ($shipping) {
+                                        echo $block->escapeHtml(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
+                                    } ?>>
+                                        <?php echo $block->escapeHtml($_country['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>City <span class="red no-display">*</span></label>
+                            <input type="text" name="destination_city" autocomplete="off" id="destination_city" value="<?php echo $block->escapeHtmlAttr(($shipping) ? $shipping->getData('city') : ''); ?>" />
+                            <div id="destination_city_autocomplete" class="am_autocomplete"></div>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Zip code <span class="red no-display">*</span></label>
+                            <input type="text" name="destination_zipcode" id="destination_zipcode" value="<?php echo $block->escapeHtmlAttr(($shipping) ? $shipping->getData('postcode') : ''); ?>" />
+                        </div>
+                        <div class="field fl">
+                            <label>State / Province</label>
+                            <input type="text" name="destination_state" id="destination_state" value="<?php echo $block->escapeHtmlAttr(($shipping) ? $state : ''); ?>" />
+                        </div>
+                    </div>
+                </div>
+                <div class="fields mar-10">
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Payment Type <span class="red">*</span></label>
+                            <select name="payment_type">
+                                <option value="P">Prepaid</option>
+                                <option value="C">Collect</option>
+                                <option value="3">Third Party</option>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>Product Type <span class="red">*</span></label> 
+                            <select name="product_group" id="calc-product-group">
+                                <option <?php if ($shipping) {
+                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $country) ? 'selected="selected"' : '');
+                                } ?> value="DOM">Domestic</option>
+                                                                <option <?php if ($shipping) {
+                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') != $country) ? 'selected="selected"' : '');
+                                } ?> value="EXP">International Express</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label>Service Type <span class="no-display">*</span></label>  
+                            <select name="service_type" class="fl" id="service_type">
+                                <?php
+                                $allowed_domestic_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                                $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                                $domestic_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods')->toOptionArray();
+                                $international_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Internationalmethods')->toOptionArray();
+                                $shipperdetail_country = $country;
+                                $shipping_country = is_object($shipping) ? $shipping->getData('country_id') : '';
+                                ?>
+                                <?php
+                                if (count($allowed_domestic_methods) > 0) {
+                                    $i = 1;
+                                    foreach ($domestic_methods as $key => $val) {
+                                        if (in_array($val['value'], $allowed_domestic_methods)) {
+                                            ?>
+                                            <option <?php echo $block->escapeHtmlAttr(($i == 1 and $shipping_country == $shipperdetail_country) ? 'selected="selected"' : ''); ?> value="<?php echo $block->escapeHtmlAttr($val['value']); ?>" id="calc_<?php echo $block->escapeHtmlAttr($val['value']); ?>" class="local DOM">
+                                            <?php echo $block->escapeHtml($val['label']); ?></option>
+                                            <?php
+                                            $i++;
+                                        }
+                                    }
+                                }
+                                ?>
+                                <?php
+                                if (count($allowed_international_methods) > 0) {
+                                    $i = 1;
+                                    foreach ($international_methods as $key => $val) {
+                                        if (in_array($val['value'], $allowed_international_methods)) {
+                                            ?>
+                                            <option <?php echo $block->escapeHtmlAttr(($i == 1 and $shipping_country != $shipperdetail_country) ? 'selected="selected"' : ''); ?> value="<?php echo $block->escapeHtmlAttr($val['value']); ?>" id="calc_<?php echo $block->escapeHtmlAttr($val['value']); ?>" class="non-local EXP">
+                                            <?php echo $block->escapeHtml($val['label']); ?></option>
+                                            <?php
+                                            $i++;
+                                        }
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="field fl">
+                            <label>Weight <span class="red">*</span></label>
+                            <div>
+                                <input type="text" name="text_weight" class="fl mar-right-10 width-60" value="<?php echo $block->escapeHtmlAttr(number_format($totalWeight, 2)); ?>" />
+                                <select name="weight_unit" class="fl width-60">
+                                    <option value="KG">KG</option>
+                                    <option value="LB">LB</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix mar-10">
+                        <div class="field fl width-270">
+                            <label style="width:270px;">Number of Pieces: <span class="red ">*</span></label>
+                            <input type="text" value="<?php echo $itemscount; ?>" name="total_count" class="fl" />
+                        </div>
+
+                    </div>
+                    <div class="cal-button-part">
+                        <button name="aramex_calc_rate_submit" type="button" id="aramex_calc_rate_submit">Caclculate</button>
+                        <button type="button" onclick="myObj.close()">Close</button>
+                        <span class="mar-lf-10 red">* are required fields</span>
+                        <input type="hidden" value="<?php echo $block->escapeHtmlAttr($_order->getIncrementId()); ?>" name="reference" />
+
+                    </div>
+                    <div class="rate-result mar-10">
+                        <h3>Result</h3>
+                        <div class="result mar-10"></div>
+                    </div>
+                </div>
+            </FIELDSET>
+            <script type="text/javascript">
+                require([ 'jquery', 'jquery/ui', 'Aramex_Shipping/js/common', 'chained'], function($){
+                    $(document).ready(function () {
+                        $('#aramex_calc_rate_submit').click(function () { // The button type should be "button" and not submit
+                            if ($('#calc-rate-form').validate(
+                                    {
+                                        rules: {
+                                            origin_zipcode: {
+                                                required: true,
+                                            },
+                                            destination_city: {
+                                                required: true,
+                                            },
+                                        },
+                                    }
+
+                            )) {
+
+                                if ($("#calc-rate-form").valid()) {
+                                    myObj.calcRate();
+                                }
+                                return false;
+                            }
+
+                        });
+
+                    });
+
+
+                $("#service_type").chained("#calc-product-group");
+
+
+                });
+            </script>
+        </form>
+    </div>
+</div>
+
+<script>
+    require([ 'jquery'], function($){
+$('body').on('mouseover','.comments-block-item-comment a',function(){
+      $(this).css('cursor', 'pointer');
+
+}); 
+
+$('body').on('click','.comments-block-item-comment a',function(e){
+      e.preventDefault();
+      $(this).css('cursor', 'pointer');
+            var thisdata = $(this).text().substring(13);
+            var current = $(this).parent().text().split('.');
+            var current1 = current[2].split(' ');
+            myObj.printLabelUrl =  "<?php echo $block->escapeJs($block->escapeUrl($this->getUrl('aramexshipment/index/printlabel/'))); ?>" + "orderr_id/" + current1[1] ;
+            myObj.printLabel(thisdata);
+});   
+       
+    });
+</script>
+

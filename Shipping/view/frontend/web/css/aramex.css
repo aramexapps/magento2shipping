@@ -1,0 +1,40 @@
+div#aramex_loader {
+    background:  url('../img/aramex_loader.gif') no-repeat center center;
+    height:31px; width:31px;
+    display:none;
+}
+.checkout-index-index .ui-autocomplete{
+    background: white;
+    border:1px solid #ccc;
+    width:250px;
+    list-style: none;
+    margin-left:0px;
+    padding-left:10px;
+    z-index:999;
+
+}
+.checkout-index-index .ui-autocomplete li a{
+    color:black;
+    cursor:pointer;
+}
+.aramex-modal{
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .4 )
+    url('../img/aramex_loader.gif')
+    50% 50%
+    no-repeat;
+}
+.aramex-modal > div{
+  width: 200px;
+  height: 100px;
+  overflow: auto;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+}

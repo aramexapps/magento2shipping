@@ -1,0 +1,208 @@
+<?php 
+/**
+ * Description:  Aramex Shipping Magento2 plugin
+ * Version:      1.0.0
+ * Author:       aramex.com
+ * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
+ * License:      GPL2
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+*/
+?>
+<div style="display:none; " class="popup popup-loading"></div>
+<p class="hidden_url" style="display:none;"><?php echo $block->escapeHtml($block->escapeUrl($this->getUrl('aramexshipment/index/bulk'))); ?></p>
+<div class="order_in_background" style="display:none;">
+    <div class="aramex_bulk">
+        <p><strong>Shipment Default Information </strong></p>
+        <form id="massform">
+            <div class="aramex_shipment_creation_part_left">
+                <FIELDSET class="aramex_shipment_creation_fieldset_big">
+                    <div class="text_short">
+                        <label><strong>Domestic Product Group</strong></label>
+                        <input class="aramex_all_options" id="aramex_shipment_info_product_group"
+                               name="aramex_shipment_info_product_group_dom" type="hidden" value="DOM"/>
+                    </div>
+                    <div class="text_short">
+                        <label>Service Type</label>
+                        <?php
+                        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+                        $scopeConfig = $objectManager->create('\Magento\Framework\App\Config\ScopeConfigInterface');
+                        $country = $scopeConfig->getValue('aramex/shipperdetail/country', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+                        $allowed_domestic_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                        $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                        $domestic_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods')->toOptionArray();
+                        $international_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Internationalmethods')->toOptionArray();
+                        $allowed_international_methods_apply = array();
+                        ?>
+                        <select class="aramex_all_options" id="aramex_shipment_info_product_type"
+                                name="aramex_shipment_info_product_type_dom">
+                            <?php
+                            if (count($allowed_domestic_methods) > 0) {
+                                foreach ($domestic_methods as $key => $val) {
+                                    if (in_array($val['value'], $allowed_domestic_methods)) {
+                                        ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="<?php echo $block->escapeHtmlAttr($val['value']); ?>"><?php echo $block->escapeHtml($val['label']); ?></option>
+                                        <?php
+                                    }
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <label>Additional Services</label>
+                        <select class="aramex_all_options" id="aramex_shipment_info_service_type"
+                                name="aramex_shipment_info_service_type_dom">
+                            <option value=""></option>
+                            <?php
+                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $domestic_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\DomesticAdditionalServices')->toOptionArray();
+                            $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
+                            ?>
+                            <?php
+                            if (count($allowed_domestic_additional_services) > 0) {
+                                $i = 1;
+                                foreach ($domestic_additional_services as $key => $val) {
+                                    if (in_array($val['value'], $allowed_domestic_additional_services)) {
+                                        ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="dom_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"><?php echo $block->escapeHtml($val['label']); ?></option>
+                                        <?php
+                                        $i++;
+                                    }
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <label>Payment Type</label>
+                        <select class="aramex_all_options" id="aramex_shipment_info_payment_type"
+                                name="aramex_shipment_info_payment_type_dom">
+                            <option value="P">Prepaid</option>
+                            <option value="C">Collect</option>
+                            <option value="3">Third Party</option>
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <?php
+                        $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
+                        ?>
+                        <label>Currency</label><br>
+                        <input type="text" class="" id="aramex_shipment_currency_code"
+                               name="aramex_shipment_currency_code_dom"
+                               value="<?php echo $block->escapeHtmlAttr($storeManager->getStore()->getCurrentCurrency()->getCode()); ?>"/>
+                    </div>
+                </FIELDSET>
+            </div>
+            <div class="aramex_shipment_creation_part_right">
+                <FIELDSET class="aramex_shipment_creation_fieldset_big">
+                    <div class="text_short">
+                        <label><strong>International Product Group</strong></label>
+                        <input class="aramex_all_options" id="aramex_shipment_info_product_group"
+                               name="aramex_shipment_info_product_group" type="hidden" value="EXP"/>
+                    </div>
+                    <div class="text_short">
+                        <label>Service Type</label>
+                        <select class="aramex_all_options" id="aramex_shipment_info_product_type"
+                                name="aramex_shipment_info_product_type">
+                            <?php
+                            if (count($allowed_international_methods) > 0) {
+                                $i = 1;
+                                foreach ($international_methods as $key => $val) {
+                                    if (in_array($val['value'], $allowed_international_methods)) {
+                                        ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="<?php echo $block->escapeHtmlAttr($val['value']); ?>"><?php echo $block->escapeHtml($val['label']); ?></option>
+                                        <?php
+                                        $i++;
+                                    }
+                                }
+                            }
+                            ?>
+
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <label>Additional Services</label>
+                        <select class="aramex_all_options" id="aramex_shipment_info_service_type"
+                                name="aramex_shipment_info_service_type">
+                            <option value=""></option>
+                            <?php
+                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $domestic_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\DomesticAdditionalServices')->toOptionArray();
+                            $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
+                            ?>
+                            <?php
+                            if (count($allowed_international_additional_services) > 0) {
+                                $i = 1;
+                                foreach ($international_additional_services as $key => $val) {
+                                    if (in_array($val['value'], $allowed_international_additional_services)) {
+                                        ?>
+                                        <option value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                id="exp_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
+                                                class="non-local "><?php echo $block->escapeHtml($val['label']); ?></option>
+                                        <?php
+                                        $i++;
+                                    }
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <label>Payment Type</label>
+                        <select class="aramex_all_options" id="aramex_shipment_info_payment_type"
+                                name="aramex_shipment_info_payment_type">
+                            <option value="P">Prepaid</option>
+                            <option value="C">Collect</option>
+                            <option value="3">Third Party</option>
+                        </select>
+                        <div id="aramex_shipment_info_service_type_div" style="display: none;"></div>
+                    </div>
+                    <div class="text_short">
+                        <label>Payment Option</label>
+                        <select class="" id="aramex_shipment_info_payment_option"
+                                name="aramex_shipment_info_payment_option">
+                            <option value=""></option>
+                            <option id="ASCC" value="ASCC" style="display: none;">Needs Shipper Account Number to be
+                                filled
+                            </option>
+                            <option id="ARCC" value="ARCC" style="display: none;">Needs Consignee Account Number to be
+                                filled
+                            </option>
+                            <option id="CASH" value="CASH">Cash</option>
+                            <option id="ACCT" value="ACCT">Account</option>
+                            <option id="PPST" value="PPST">Prepaid Stock</option>
+                            <option id="CRDT" value="CRDT">Credit</option>
+                        </select>
+                    </div>
+                    <div class="text_short">
+                        <label>Custom Amount</label><br/>
+                        <input class="" type="text" id="aramex_shipment_info_custom_amount"
+                               name="aramex_shipment_info_custom_amount" value=""/>
+                    </div>
+                    <div class="text_short">
+                        <label>Currency</label><br/>
+                        <input type="text" class="" id="aramex_shipment_currency_code"
+                               name="aramex_shipment_currency_code"
+                               value="<?php echo $block->escapeHtmlAttr($storeManager->getStore()->getCurrentCurrency()->getCode()); ?>"/>
+                    </div>
+                    <div class="aramex_clearer"></div>
+                </FIELDSET>
+            </div>
+            <div class="aramex_clearer"></div>
+            <div class="aramex_result"></div>
+            <div class="aramex_clearer"></div>
+            <input name="aramex_return_shipment_creation_date" type="hidden" value="create"/>
+            <button id="aramex_shipment_creation_submit_id" type="button" class="primary"
+                    name="aramex_shipment_creation_submit">Create
+                Bulk Shipment
+            </button>
+            <button class="aramexclose primary" type="button">Close</button>
+        </form>
+    </div>
+</div>
+<div data-mage-init='{"aramexmass":{}}'></div>

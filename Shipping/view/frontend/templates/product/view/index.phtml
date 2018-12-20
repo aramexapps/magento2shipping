@@ -1,0 +1,281 @@
+<?php
+
+if ($this->isActive() == '1') {
+    ?>
+    <button data-popup-open="popup-1" type="button" style="margin-top:10px; margin-bottom:10px;"
+            title="Check Aramex Shipping Rate"
+            class="button btn-cart aramexcalculator"
+    >
+        <span><span>Check Aramex Shipping Rate</span></span>
+    </button>
+    <div class="aramex_popup" data-popup="popup-1">
+        <div class="aramex_popup-inner">
+            <h2 style="color: #EA7601;">Check Aramex Shipping Rate</h2>
+            <form method="post" action="">
+                <h3>Shipment Destination</h3>
+                <div class="aramex_field">
+                    <label>Country</label>
+                    <select name="destination_country" class="arm_country" id="destination_country">
+                        <?php if (count($this->getCountries()) > 0): ?>
+                            <?php foreach ($this->getCountries() as $_country): ?>
+                                <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>" <?php
+                                if ($this->getDestinationAddress()) {
+                                    $address = $this->getDestinationAddress();
+                                    echo ($address['country_id'] == $_country['value']) ? 'selected="selected"' : '';
+                                }
+                                ?>>
+                                    <?php echo $block->escapeHtml($_country['label']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="aramex_field">
+                    <label>City <span class="red no-display">*</span></label>
+                    <input type="text" name="destination_city" autocomplete="off" id="destination_city"
+                           value="<?php echo $block->escapeHtmlAttr(((isset($address['city'])) ? $address['city'] : '')); ?>"/>
+                    <div id="destination_city_loading_autocomplete" class="loading_autocomplete" style="display:none;">
+                        <img style="height:30px; margin-left:0px;"
+                             src="<?php echo $block->escapeUrl($this->getViewFileUrl('Aramex_Shipping::img/aramex_loader.gif')); ?>"
+                             alt="<?php echo $this->escapeHtmlAttr('Loading cities...') ?>"
+                             title="<?php echo $this->escapeHtmlAttr('Loading cities...') ?>"
+                             class="v-middle"/>
+                    </div>
+                </div>
+                <div class="aramex_field">
+                    <div class="field fl width-270">
+                        <label>Zip code <span class="red no-display">*</span></label>
+                        <input type="text" name="destination_zipcode" id="destination_zipcode"
+                               value="<?php echo  $this->escapeHtmlAttr((isset($address['postcode'])) ? $address['postcode'] : ''); ?>"/>
+                    </div>
+                </div>
+                <div class="aramex_field aramex_result_block">
+                    <h3 style="display:none; color: #EA7601;">Result</h3>
+                    <div class="aramex_result mar-10">
+                    </div>
+                    <span class="aramex-please-wait" id="payment-please-wait" style="display:none;">
+                        <img src="<?php echo $block->escapeUrl($this->getViewFileUrl('Aramex_Shipping::img/preloader.gif')); ?>"
+                             alt="<?php echo $this->escapeHtmlAttr('Please wait...') ?>"
+                             title="<?php echo $this->escapeHtmlAttr('Please wait...') ?>"
+                             class="v-middle"/> <?php echo $block->escapeHtml('Please wait...') ?>
+                    </span>
+                </div>
+                <button name="aramex_calc_rate_submit" class="button btn-cart aramexcalculator_send" type="button"
+                        id="aramex_calc_rate_submit"
+                        >Calculate
+                </button>
+            </form>
+            <a class="aramex_popup-close" data-popup-close="popup-1" href="#">x</a>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="<?php echo $block->escapeUrl($this->getSkinUrl('aramex/css/jquery-ui.css')); ?>"/>
+    <script>
+        require([
+            'jquery',
+            'jquery/ui'
+        ], function ($) {
+            
+        $(document).ready(function () {
+
+			$(".aramexcalculator_send").click(function() {
+			    sendAramexRequest('<?php echo $block->escapeHtml($this->getId()); ?>');
+			});
+
+            $(function () {
+                //----- OPEN
+                $('[data-popup-open]').on('click', function (e) {
+                    var targeted_popup_class = $(this).attr('data-popup-open');
+                    $('[data-popup="' + targeted_popup_class + '"]').fadeIn(350);
+                    e.preventDefault();
+                });
+
+                //----- CLOSE
+                $('[data-popup-close]').on('click', function (e) {
+                    var targeted_popup_class = $(this).attr('data-popup-close');
+                    $('[data-popup="' + targeted_popup_class + '"]').fadeOut(350);
+                    e.preventDefault();
+                });
+            });
+       });
+
+        function sendAramexRequest() {
+            var chk_city = $('#destination_city').val();
+            var chk_postcode = $('#destination_zipcode').val();
+            var country_code = $("#destination_country").val();
+            var store_id = "<?php echo $block->escapeJs($block->escapeHtml($this->getStoreId())); ?>";
+            var currency = "<?php echo $block->escapeJs($block->escapeHtml($this->getCurrentCurrencyCode())); ?>";
+            var product_id = "<?php echo $block->escapeJs($block->escapeHtml($this->getId())); ?>";
+            var system_base_url = getSystemBaseUrl();
+
+            $('.aramex_result_block h3').css("display", "none");
+            $('.aramex-please-wait').css("display", "block");
+            $('.aramex_result').css("display", "none");
+   
+            $.ajax({
+                url: system_base_url + "aramexcalculator/index/calculator",
+                data: {
+					form_key:$.cookie('form_key'),
+                    city: chk_city,
+                    post_code: chk_postcode,
+                    country_code: country_code,
+                    store_id: store_id,
+                    product_id: product_id,
+                    currency: currency
+
+                },
+                type: 'Post',
+                success: function (result) {
+                    var message = "";
+                    var response = result;
+                    if (response.error) {
+                        message = "<p style='color:red;'>" + response.error + "</p>";
+                    } else {
+                        $.each(response, function (index, value) {
+                            message = message + "<p style='color: rgb(234, 118, 1);'>" + value.label + " " + value.amount + " " + value.currency + "</p>";
+                        });
+                    }
+                    $('.aramex_result_block h3').css("display", "block");
+                    $('.aramex_result').css("display", "block");
+                    $('.aramex-please-wait').css("display", "none");
+                    $('.aramex_result').html(message);
+                }
+            });
+        }
+ 
+
+        function getSystemBaseUrl() {
+            return BASE_URL = '<?php echo $block->escapeJs($block->escapeHtml($block->escapeUrl($this->getBaseUrl()))); ?>';
+        }
+
+        var billingAramexCitiesObj;
+        var billing_aramex_cities_temp;
+        var billing_aramex_cities;
+        billingAramexCitiesObj = AutoSearchControls('destination_city', billing_aramex_cities);
+        $("select[name='destination_country']").change(function () {
+            getAllCitiesJson('destination_country');
+        });
+        getAllCitiesJson('destination_country');
+
+        function AutoSearchControls(type, search_city) {
+            return $('input[name="' + type + '"]')
+                .autocomplete({
+                    /*source: search_city,*/
+                    form_key: window.FORM_KEY,
+                    minLength: 3,
+                    scroll: true,
+                    source: function (req, responseFn) {
+                        var re = $.ui.autocomplete.escapeRegex(req.term);
+                        var matcher = new RegExp("^" + re, "i");
+                        var a = $.grep(search_city, function (item, index) {
+                            return matcher.test(item);
+                        });
+                        responseFn(a);
+                    },
+                    search: function (event, ui) {
+                        /* open initializer */
+                        forceDisableNext(type);
+                    },
+                    response: function (event, ui) {
+                        /* open initializer */
+                        $('#' + type + '_loading_autocomplete').css("display", "none");
+                        $('.ui-autocomplete').css("z-index", "999999");
+                        $('.ui-autocomplete').css("display", "block");
+                    },
+                }).focus(function () {
+                    $(this).autocomplete("search", "");
+                });
+        }
+
+        function forceDisableNext(type) {
+            $('#' + type + '_loading_autocomplete').show();
+        }
+
+        function getAllCitiesJson(type) {
+            var system_base_url = getSystemBaseUrl();
+            var country_code = $("select[name='" + type + "']").val();
+            var url_check = system_base_url + "apilocationvalidator/index/searchautocities?country_code=" + country_code;
+
+            billing_aramex_cities_temp = '';
+            billingAramexCitiesObj.autocomplete("option", "source", url_check);
+        }
+        });
+    </script>
+    <style>
+        /*------------------------------------------------------------
+        -------- DEMO Code
+        ------------------------------------------------------------*/
+        /* Outer */
+        .aramex_popup {
+            width: 100%;
+            height: 100%;
+            display: none;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+        }
+
+        /* Inner */
+        .aramex_popup-inner {
+            max-width: 700px;
+            width: 90%;
+            padding: 40px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 1);
+            border-radius: 3px;
+            background: #fff;
+        }
+
+        /* Close Button */
+        .aramex_popup-close {
+            width: 30px;
+            height: 30px;
+            display: inline-block;
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            transition: ease 0.25s all;
+            -webkit-transform: translate(50%, -50%);
+            transform: translate(50%, -50%);
+            border-radius: 1000px;
+            background: rgba(0, 0, 0, 0.8);
+            font-family: Arial, Sans-Serif;
+            font-size: 20px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .aramex_popup-close:hover {
+            -webkit-transform: translate(50%, -50%) rotate(180deg);
+            transform: translate(50%, -50%) rotate(180deg);
+            background: rgba(0, 0, 0, 1);
+            text-decoration: none;
+        }
+
+        .aramex_popup .aramex_field {
+            padding: 10px;
+        }
+
+        .aramex_popup label {
+            width: 60px;
+        }
+
+        .aramex_popup select {
+            padding: 5px;
+        }
+
+        .aramex_popup-inner button, .aramex_popup-inner input, .aramex_popup-inner select, .aramex_popup-inner table, .aramex_popup-inner textarea {
+            font-family: Arial !important;
+        }
+
+        .ui-helper-hidden-accessible {
+            display: none;
+        }
+    </style>
+<?php } ?>
