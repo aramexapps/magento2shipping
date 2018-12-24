@@ -20,7 +20,7 @@
   "repositories":[
         {
             "type":"vcs",
-            "url":"git@github.com:andriyyy/aramex.git"
+            "url":"git@github.com:aramexapps/magento2shipping.git"
         }
     ],
   "autoload": {
