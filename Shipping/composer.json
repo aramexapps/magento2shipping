@@ -17,6 +17,12 @@
       "role": "Developer"
     }
   ],
+  "repositories":[
+        {
+            "type":"git",
+            "url":"git@github.com:astorm/composer-plugin-example.git"
+        }
+    ],
   "autoload": {
     "files": [ "registration.php" ],
     "psr-4": {
