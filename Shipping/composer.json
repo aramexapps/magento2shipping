@@ -20,7 +20,7 @@
   "repositories":[
         {
             "type":"git",
-            "url":"git@github.com:astorm/composer-plugin-example.git"
+            "url":"https://github.com/andriyyy/aramex.git"
         }
     ],
   "autoload": {
