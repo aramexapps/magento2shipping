@@ -20,7 +20,7 @@
   "repositories":[
         {
             "type":"vcs",
-            "url":"https://github.com/andriyyy/aramex.git"
+            "url":"git@github.com:andriyyy/aramex.git"
         }
     ],
   "autoload": {
