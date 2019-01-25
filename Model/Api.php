@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Model;
 
 use Magento\Framework\Model\AbstractModel;
@@ -31,12 +31,18 @@ class Api extends AbstractModel
      * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
      * @param \Aramex\Shipping\Helper\Data $helper
      */
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
     public function __construct(
         \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
-        \Aramex\Shipping\Helper\Data $helper
+        \Aramex\Shipping\Helper\Data $helper,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory
     ) {
         $this->resultJsonFactory = $resultJsonFactory;
         $this->helper = $helper;
+        $this->soapClientFactory = $soapClientFactory;
     }
     
     /**
@@ -64,16 +70,15 @@ class Api extends AbstractModel
             'NameStartsWith' => $NameStartsWith,
         ];
 
-        $baseUrl = $this->helper->getWsdlPath();
-        //SOAP object
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'Location-API-WSDL.wsdl');
-        $soapClient->setSoapVersion(SOAP_1_1);
-
+        $soapClient = $this->soapClientFactory->create($this->helper->getWsdlPath() .
+                    'Location-API-WSDL.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
+    
         try {
             $results = $soapClient->FetchCities($params);
             if (is_object($results)) {
                 if (!$results->HasErrors) {
                     $cities = isset($results->Cities->string) ? $results->Cities->string : false;
+                    $cities = (is_array($cities))?$cities: [$cities];
                     return $cities;
                 }
             }
@@ -111,10 +116,9 @@ class Api extends AbstractModel
             ]
         ];
 
-        $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'Location-API-WSDL.wsdl', ['cache_wsdl' => WSDL_CACHE_NONE]);
-        $soapClient->setSoapVersion(SOAP_1_1);
+        $soapClient = $this->soapClientFactory->create($this->helper->getWsdlPath() .
+                    'Location-API-WSDL.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         $reponse = [];
         try {
             $results = $soapClient->ValidateAddress($params);

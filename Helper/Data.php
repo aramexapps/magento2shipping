@@ -6,10 +6,11 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Helper;
 
 use Magento\Framework\App\Helper\AbstractHelper;
+
 /**
  * Class Helper
  */
@@ -129,7 +130,7 @@ class Data extends AbstractHelper
      * Gets directry path with aramex wsdl files location
      *
      * @return string Directry path with aramex wsdl files location
-     */    
+     */
     public function getWsdlPath()
     {
         $wsdlBasePath = $this->reader->getModuleDir('etc', 'Aramex_Shipping') . '/wsdl/Aramex/';
@@ -148,7 +149,7 @@ class Data extends AbstractHelper
      * Gets default user account detailes
      *
      * @return array Default user account detailes
-     */ 
+     */
     public function getStaticClientInfo()
     {
         return [
@@ -169,7 +170,7 @@ class Data extends AbstractHelper
      * @param string $configPath Path to configuration file
      * @param array $storeId Store id
      * @return string|bulean Admin emails
-     */    
+     */
     public function getEmails($configPath, $storeId)
     {
         $data = $this->scopeConfiguration->getValue(
@@ -187,7 +188,7 @@ class Data extends AbstractHelper
      *
      * @param string $config_path Path to configuration file
      * @return array Configuration detailes
-     */      
+     */
     public function getConfig($config_path)
     {
         return $this->scopeConfiguration->getValue(
@@ -200,7 +201,7 @@ class Data extends AbstractHelper
      *
      * @param string $config_path Path to configuration file
      * @return array Configuration detailes
-     */     
+     */
     public function get($config_path)
     {
         return $this->scopeConfiguration->getValue(
@@ -212,7 +213,7 @@ class Data extends AbstractHelper
      * Gets name of shipper
      *
      * @return string Name of shipper
-     */     
+     */
     public function getCode()
     {
         return 'aramex';

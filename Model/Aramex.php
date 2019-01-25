@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Model;
 
 use Magento\Quote\Model\Quote\Address\RateRequest;
@@ -16,7 +16,7 @@ use Magento\Framework\Xml\Security;
 use \Magento\Customer\Model\Session;
 
     /**
-     * Class Aramex shipping 
+     * Class Aramex shipping
      */
 class Aramex extends AbstractCarrierOnline implements CarrierInterface
 {
@@ -97,10 +97,16 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
      * @var \Magento\Customer\Model\Session
      */
     private $sessionCustomer;
-    
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
+
+    private $objectFactory;
+
      /**
-      * Constructor 
-      * 
+      * Constructor
+      *
       * @param \Magento\Shipping\Model\Rate\ResultFactory $rateResultFactory
       * @param \Magento\Quote\Model\Quote\Address\RateResult\MethodFactory $rateMethodFactory
       * @param \Aramex\Shipping\Helper\Data $helper
@@ -153,6 +159,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         \Magento\Customer\Model\Customer $customer,
         \Magento\Directory\Model\Config\Source\Country $country,
         Session $sessionCustomer,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
+        \Magento\Framework\DataObjectFactory $objectFactory,
         array $data = []
     ) {
         $this->_rateResultFactory = $rateResultFactory;
@@ -166,6 +174,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $this->country = $country;
         $this->sessionCustomer= $sessionCustomer;
         $this->_code = $helper->getCode();
+        $this->soapClientFactory = $soapClientFactory;
+        $this->objectFactory = $objectFactory;
         parent::__construct(
             $scopeConfig,
             $rateErrorFactory,
@@ -234,7 +244,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     public function setRequest(RateRequest $request)
     {
         $this->request = $request;
-        $r = new \Magento\Framework\DataObject();
+        $r = $this->objectFactory->create();
         $r = $this->setAdditionalData($request, $r);
         if ($request->getAramexMachinable()) {
             $machinable = $request->getAramexMachinable();
@@ -417,7 +427,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     /**
      * Makes request to Aramex server
      *
-     * @param array $params Parameters 
+     * @param array $params Parameters
      * @param string $m_value Shipping method value
      * @param string $m_title Shipping method name
      * @return array Response from Aramex server
@@ -426,8 +436,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     {
         $priceArr = [];
         $baseUrl = $this->helper->getWsdlPath();
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'aramex-rates-calculator-wsdl.wsdl');
-        $soapClient->setSoapVersion(SOAP_1_1);
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         try {
             $results = $soapClient->CalculateRate($params);
             if ($results->HasErrors) {
@@ -542,7 +552,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
      */
     private function setTrackingReqeust()
     {
-        $r = new \Magento\Framework\DataObject();
+        $r = $this->objectFactory->create();
         $userId = $this->getConfigData('userid');
         $r->setUserId($userId);
         $this->_rawTrackRequest = $r;
@@ -561,11 +571,12 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             $this->result = $this->_trackFactory->create();
         }
         $defaults = $this->getDefaults();
-        $url = $this->defaultGatewayUrl . 'Tracking.wsdl';
+        $url = $this->defaultGatewayUrl;
 
         //SOAP object
-        $clientAramex = new \Zend\Soap\Client($url);
-        $clientAramex->setSoapVersion(SOAP_1_1);
+        $clientAramex = $this->soapClientFactory->create($url .
+                    'Tracking.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
+
         $aramexParams = $this->_getAuthDetails();
         $aramexParams['Transaction'] = ['Reference1' => '001'];
         $aramexParams['Shipments'] = [$trackingvalue];
@@ -575,16 +586,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             $tracking = $this->_trackStatusFactory->create();
             $tracking->setCarrier('aramex');
             $tracking->setCarrierTitle($this->getConfigData('title'));
+            $tracking->setUrl('https://www.aramex.com/track/results?mode=0&ShipmentNumber=' . $trackingvalue);
             $tracking->setTracking($trackingvalue);
-
-            if (!empty($_resAramex->TrackingResults->KeyValueOfstringArrayOfTrackingResultmFAkxlpY->
-                Value->TrackingResult)) {
-                $tracking->setTrackSummary($this->getTrackingInfoTable($_resAramex->TrackingResults->
-                    KeyValueOfstringArrayOfTrackingResultmFAkxlpY->Value->TrackingResult));
-            } else {
-                $tracking->setTrackSummary('Unable to retrieve quotes, please check if '
-                    . 'the Tracking Number is valid or contact your administrator.');
-            }
             $this->result->append($tracking);
         } else {
             $errorMessage = '';

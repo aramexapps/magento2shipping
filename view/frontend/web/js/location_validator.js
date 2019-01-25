@@ -18,7 +18,7 @@ var billing_aramex_cities;
         var i = setInterval(function () {
 
             if (jQuery('#shipping').find("input[name^='city']").length ) {
-            	//runValidation();
+                //runValidation();
             /* stop waiting */
                 clearInterval(i);
                 /* wait for "next" button */
@@ -31,10 +31,6 @@ var billing_aramex_cities;
                     }
                 }, 100);
                 if (active == 1) {
-
-
-
-
                     /* set HTML blocks */
                     jQuery('#shipping').find("input[name^='city']").after('<div id="aramex_loader" style="height:31px; width:31px; display:none;"></div>');
                     jQuery('.checkout-index-index').append('<div  class="aramex-modal"  style="display:none;"><div class="popup-inner">Loading Address Validation...</div></div>');
@@ -50,8 +46,7 @@ var billing_aramex_cities;
                     });
                     getAllCitiesJson('shipping', shippingAramexCitiesObj);
 
-                    if(jQuery('#shipping').find(".action-show-popup").length == 0){
-
+                    if (jQuery('#shipping').find(".action-show-popup").length == 0) {
                     jQuery('#shipping').find("input[name^='city']").blur(function () {
                         addressApiValidation('shipping')
                     });
@@ -63,9 +58,8 @@ var billing_aramex_cities;
                     jQuery('#shipping').find("input[name^='postcode']").blur(function () {
                         addressApiValidation('shipping')
                     });
-                }else{
-
-                	jQuery('#opc-new-shipping-address').find("input[name^='city']").blur(function () {
+                } else {
+                    jQuery('#opc-new-shipping-address').find("input[name^='city']").blur(function () {
                         addressApiValidation('opc-new-shipping-address')
                     });
                     jQuery('#opc-new-shipping-address').find("select[name^='region_id']").blur(function () {
@@ -76,12 +70,7 @@ var billing_aramex_cities;
                     jQuery('#opc-new-shipping-address').find("input[name^='postcode']").blur(function () {
                         addressApiValidation('opc-new-shipping-address')
                     });
-
                 }
-
-
-
-
                 }
             }
 

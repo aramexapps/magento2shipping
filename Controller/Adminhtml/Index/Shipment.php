@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 use Magento\Framework\Controller\ResultFactory;
@@ -19,12 +19,12 @@ class Shipment extends \Magento\Backend\App\Action
 {
     /**
      * Email setting
-     * @var string 
+     * @var string
      */
     const XML_PATH_TRANS_IDENTITY_EMAIL = 'trans_email/ident_general/email';
     /**
      * Name setting
-     * @var string 
+     * @var string
      */
     const XML_PATH_TRANS_IDENTITY_NAME = 'trans_email/ident_general/name';
     /**
@@ -100,7 +100,15 @@ class Shipment extends \Magento\Backend\App\Action
      * @var \Magento\Framework\Controller\Result\JsonFactory
      */
     private $resultJsonFactory;
-    
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
+
+    /**
+     * @var \Magento\Sales\Model\Order\Shipment\Track
+     */
+    private $tracking;
     /**
      * Constructor
      * @param \Magento\Backend\App\Action\Context $context
@@ -126,6 +134,8 @@ class Shipment extends \Magento\Backend\App\Action
         \Aramex\Shipping\Helper\Data $helper,
         \Magento\Sales\Model\Order $order,
         \Magento\Framework\DB\Transaction $transaction,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
+        \Magento\Sales\Model\Order\Shipment\Track $tracking,
         Session $session
     ) {
         $this->resultPageFactory = $resultPageFactory;
@@ -139,6 +149,8 @@ class Shipment extends \Magento\Backend\App\Action
         $this->order = $order;
         $this->backEndSession = $session;
         $this->transaction = $transaction;
+        $this->soapClientFactory = $soapClientFactory;
+        $this->tracking = $tracking;
         parent::__construct($context);
     }
 
@@ -515,8 +527,8 @@ class Shipment extends \Magento\Backend\App\Action
     {
         $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'shipping.wsdl');
-        $soapClient->setSoapVersion(SOAP_1_1);
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'shipping.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         try {
             //create shipment call
                 $auth_call = $soapClient->CreateShipments($major_par);
@@ -537,7 +549,6 @@ class Shipment extends \Magento\Backend\App\Action
                     $this->shipmentLoader->setShipmentId(null);
                     $this->shipmentLoader->setShipment($data);
                     $this->shipmentLoader->setTracking(null);
-                    $shipment = $this->shipmentLoader->load();
                     if (!$shipment) {
                         $this->_forward('noroute');
                         return;
@@ -555,7 +566,7 @@ class Shipment extends \Magento\Backend\App\Action
 
                     ///////////// block shipment
                     $shipment->register();
-                   $this->_saveShipment($shipment);
+                    $this->_saveShipment($shipment);
                     $this->sendEmail($post, $order, $auth_call);
                     $this->messageManager->addSuccess(
                         'Aramex Shipment Number: ' . $auth_call->Shipments->ProcessedShipment->ID .

@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 /**
@@ -23,7 +23,7 @@ class Rate extends \Magento\Framework\App\Action\Action
 
     /**
      * Post request
-     * 
+     *
      * @var array
      */
     private $request;
@@ -45,7 +45,10 @@ class Rate extends \Magento\Framework\App\Action\Action
      * @var \Magento\Framework\Controller\Result\JsonFactory
      */
     private $resultJsonFactory;
-
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
     /**
      * Constructor
      *
@@ -60,14 +63,15 @@ class Rate extends \Magento\Framework\App\Action\Action
         \Aramex\Shipping\Helper\Data $helper,
         \Magento\Directory\Model\Config\Source\Country $country,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
+        \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory
     ) {
         $this->request = $context->getRequest();
         $this->scopeConfig = $scopeConfig;
         $this->helper = $helper;
         $this->country = $country;
         $this->resultJsonFactory = $resultJsonFactory;
-
+        $this->soapClientFactory = $soapClientFactory;
         parent::__construct($context);
     }
 
@@ -135,8 +139,8 @@ class Rate extends \Magento\Framework\App\Action\Action
                 ]
             ];
             $baseUrl = $this->helper->getWsdlPath();
-            $soapClient = new \Zend\Soap\Client($baseUrl . 'aramex-rates-calculator-wsdl.wsdl');
-            $soapClient->setSoapVersion(SOAP_1_1);
+            $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
             try {
                 $results = $soapClient->CalculateRate($params);
                 if ($results->HasErrors) {

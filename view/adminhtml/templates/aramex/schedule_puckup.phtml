@@ -157,7 +157,6 @@ foreach ($itemsv as $itemvv) {
     <div class="pickup-form">
         <form method="post" action="<?php echo $block->escapeUrl($this->getUrl('aramexshipment/index/schedulepickup')); ?>"
               id="pickup-form">
-            $this->order_id
             <input type="hidden" name="order_id" value="<?php echo $this->order_id; ?>"/>
             <FIELDSET>
                 <legend style="font-weight:bold; padding:0 5px;">Schedule Pickup</legend>

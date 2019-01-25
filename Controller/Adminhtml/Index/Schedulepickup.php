@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 /**
@@ -46,6 +46,10 @@ class Schedulepickup extends \Magento\Backend\App\Action
     
     private $shipment;
     /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
+    /**
      * Constructor
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
@@ -62,6 +66,7 @@ class Schedulepickup extends \Magento\Backend\App\Action
         \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
         \Aramex\Shipping\Helper\Data $helper,
         \Magento\Sales\Model\Order $order,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
         \Magento\Sales\Model\Order\Shipment $shipment
     ) {
         $this->scopeConfig = $scopeConfig;
@@ -70,6 +75,7 @@ class Schedulepickup extends \Magento\Backend\App\Action
         $this->helper = $helper;
         $this->order = $order;
         $this->shipment = $shipment;
+        $this->soapClientFactory = $soapClientFactory;
         parent::__construct($context);
     }
     /**
@@ -153,8 +159,8 @@ class Schedulepickup extends \Magento\Backend\App\Action
             ];
             $baseUrl = $this->helper->getWsdlPath();
             //SOAP object
-            $soapClient = new \Zend\Soap\Client($baseUrl . 'shipping.wsdl');
-            $soapClient->setSoapVersion(SOAP_1_1);
+            $soapClient = $this->soapClientFactory->create($baseUrl .
+                'shipping.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
             try {
                 $results = $soapClient->CreatePickup($params);
                 if ($results->HasErrors) {

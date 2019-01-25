@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Model;
 
 use Magento\Framework\Model\AbstractModel;
@@ -51,10 +51,13 @@ class Aramexcalculator extends AbstractModel
      * @var \Magento\Catalog\Model\Product
      */
     private $product;
-    
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
     /**
      * Constructor
-     * 
+     *
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Aramex\Shipping\Helper\Data $helper
      * @param \Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods $domesticmethods
@@ -66,13 +69,15 @@ class Aramexcalculator extends AbstractModel
         \Aramex\Shipping\Helper\Data $helper,
         \Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods $domesticmethods,
         \Aramex\Shipping\Model\Carrier\Aramex\Source\Internationalmethods $internationalmethods,
-        \Magento\Catalog\Model\Product $product
+        \Magento\Catalog\Model\Product $product,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->helper = $helper;
         $this->domesticmethods = $domesticmethods;
         $this->internationalmethods = $internationalmethods;
         $this->product = $product;
+        $this->soapClientFactory = $soapClientFactory;
     }
     
     /**
@@ -140,8 +145,8 @@ class Aramexcalculator extends AbstractModel
         ];
 
         //SOAP object
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'aramex-rates-calculator-wsdl.wsdl');
-        $soapClient->setSoapVersion(SOAP_1_1);
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         $priceArr = [];
         foreach ($allowed_methods as $m_value => $m_title) {
             $params['ShipmentDetails']['ProductType'] = $m_value;

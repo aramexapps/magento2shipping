@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 use Magento\Framework\Controller\ResultFactory;
@@ -39,7 +39,10 @@ class Printlabel extends \Magento\Framework\App\Action\Action
      * @var \Magento\Sales\Api\OrderRepositoryInterface
      */
     private $orderRepository;
-
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
     /**
      * Constructor
      *
@@ -52,12 +55,14 @@ class Printlabel extends \Magento\Framework\App\Action\Action
         \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Aramex\Shipping\Helper\Data $helper,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
     ) {
         $this->request = $context->getRequest();
         $this->scopeConfig = $scopeConfig;
         $this->helper = $helper;
         $this->orderRepository = $orderRepository;
+        $this->soapClientFactory = $soapClientFactory;
         parent::__construct($context);
     }
 
@@ -69,11 +74,11 @@ class Printlabel extends \Magento\Framework\App\Action\Action
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         $_order = $this->orderRepository->get($this->request->getParam('order_id'));
         $previuosUrl = $this->_redirect->getRefererUrl();
-            $baseUrl = $this->helper->getWsdlPath();
-            $soapClient = new \Zend\Soap\Client($baseUrl . 'shipping.wsdl');
-            $soapClient->setSoapVersion(SOAP_1_1);
-            $clientInfo = $this->helper->getClientInfo();
-            $awbno = $this->getStatusHistory($_order);
+        $baseUrl = $this->helper->getWsdlPath();
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'shipping.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
+        $clientInfo = $this->helper->getClientInfo();
+        $awbno = $this->getStatusHistory($_order);
 
         if (!is_object($_order->getSize())) {
             foreach ($_order->getShipmentsCollection() as $_shipment) {

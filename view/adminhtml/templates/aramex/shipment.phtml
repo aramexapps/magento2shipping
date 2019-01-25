@@ -920,11 +920,13 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                 $i = 1;
                                 foreach ($domestic_additional_services as $key => $val) {
                                     if (in_array($val['value'], $allowed_domestic_additional_services)) {
-                                        ?>
-                                        <option <?php echo $block->escapeHtmlAttr((($_type == $val['value'] and $_group == 'DOM') || $cod == true) ? 'selected="selected"' : ''); ?>
+                                        ?> 
+                                        <option 
+                                        <?php echo (($_type == $val['value'] and $_group == 'DOM') || $cod === true) ? 'selected="selected"' : ''; ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="dom_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
-                                            class="DOM local"><?php echo $block->escapeHtml($val['label']); ?></option>
+                                            class="DOM local"><?php echo $block->escapeHtml($val['label']); ?>
+                                        </option>
                                         <?php
                                         $i++;
                                     }
@@ -937,7 +939,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                 foreach ($international_additional_services as $key => $val) {
                                     if (in_array($val['value'], $allowed_international_additional_services)) {
                                         ?>
-                                        <option <?php echo $block->escapeHtmlAttr(($_type == $val['value'] and $_group == 'DOM') ? 'selected="selected"' : ''); ?>
+                                        <option <?php echo $block->escapeHtmlAttr(($_type == $val['value'] and $_group == 'DOM' ) ? 'selected="selected"' : ''); ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="exp_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             class="non-local EXP"><?php echo $block->escapeHtml($val['label']); ?></option>

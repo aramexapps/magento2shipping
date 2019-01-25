@@ -6,10 +6,11 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 use Magento\Framework\Controller\ResultFactory;
+
 /**
  * Controller of "Bulk Aramex Shipment" functionality
  */
@@ -17,23 +18,23 @@ class Bulk extends \Magento\Backend\App\Action
 {
     /**
      * @var string "email" path
-     */    
+     */
     const XML_PATH_TRANS_IDENTITY_EMAIL = 'trans_email/ident_general/email';
     /**
      * @var string "name" path
-     */       
+     */
     const XML_PATH_TRANS_IDENTITY_NAME = 'trans_email/ident_general/name';
     /**
      * @var string "shipment_template" path
-     */      
+     */
     const XML_PATH_SHIPMENT_EMAIL_TEMPLATE = 'aramex/template/shipment_template';
     /**
      * @var string "copy_to" path
-     */     
+     */
     const XML_PATH_SHIPMENT_EMAIL_COPY_TO = 'aramex/template/copy_to';
     /**
      * @var string "copy_method" path
-     */     
+     */
     const XML_PATH_SHIPMENT_EMAIL_COPY_METHOD = 'aramex/template/copy_method';
 
     /**
@@ -45,31 +46,31 @@ class Bulk extends \Magento\Backend\App\Action
     /**
      * Object of \Magento\Framework\App\Config\ScopeConfigInterface
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */    
+     */
     private $scopeConfig;
 
     /**
      * Object of \Magento\Shipping\Controller\Adminhtml\Order\ShipmentLoader
      * @var \Magento\Shipping\Controller\Adminhtml\Order\ShipmentLoader
-     */       
+     */
     private $shipmentLoader;
 
     /**
      * Object of \Magento\Framework\Mail\Template\TransportBuilder
      * @var \Magento\Framework\Mail\Template\TransportBuilder
-     */      
+     */
     private $transportBuilder;
 
     /**
      * Object of \Magento\Framework\Controller\Result\JsonFactory
      * @var \Magento\Framework\Controller\Result\JsonFactory
-     */      
+     */
     private $resultJsonFactory;
 
     /**
      * Object of \Magento\Framework\DB\Transaction
      * @var \Magento\Framework\DB\Transaction
-     */      
+     */
     private $transaction;
     /**
      * Object of \Aramex\Shipping\Helper\Data
@@ -81,7 +82,10 @@ class Bulk extends \Magento\Backend\App\Action
      * @var \Magento\Sales\Model\Order
      */
     private $order;
-
+    /**
+     * @var \Magento\Framework\Webapi\Soap\ClientFactory
+     */
+    private $soapClientFactory;
     /**
      * Constructor
      * @param \Magento\Backend\App\Action\Context $context
@@ -103,6 +107,7 @@ class Bulk extends \Magento\Backend\App\Action
         \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
         \Aramex\Shipping\Helper\Data $helper,
         \Magento\Sales\Model\Order $order,
+        \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
         \Magento\Framework\DB\Transaction $transaction
     ) {
         $this->resultPageFactory = $resultPageFactory;
@@ -113,6 +118,7 @@ class Bulk extends \Magento\Backend\App\Action
         $this->helper = $helper;
         $this->order = $order;
         $this->transaction = $transaction;
+        $this->soapClientFactory = $soapClientFactory;
         parent::__construct($context);
     }
 
@@ -295,8 +301,8 @@ class Bulk extends \Magento\Backend\App\Action
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
-        $soapClient = new \Zend\Soap\Client($baseUrl . 'shipping.wsdl');
-        $soapClient->setSoapVersion(SOAP_1_1);
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'shipping.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         $aramex_errors = false;
         $errors = [];
         try {
@@ -369,7 +375,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param object $shipment Shipment object
      * @return void
-     */    
+     */
     private function _saveShipment($shipment)
     {
         $shipment->getOrder()->setIsInProcess(true);
@@ -387,7 +393,7 @@ class Bulk extends \Magento\Backend\App\Action
      * @param string $order_id Order id
      * @param array $post Post request
      * @return array List of orders
-     */      
+     */
     private function getOrders($key, $order_id, $post)
     {
         $orders = [];
@@ -427,7 +433,7 @@ class Bulk extends \Magento\Backend\App\Action
      * @param array $post_out Selected orders
      * @param array $post Post request
      * @return array List of orders with pending status
-     */     
+     */
     private function getOrdersWithPendingStatus($post_out, $post)
     {
         if (!empty($post_out["selectedOrders"])) {
@@ -468,7 +474,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param array $itemsv Orders
      * @return array List of products
-     */      
+     */
     private function getTotalItems($itemsv)
     {
         $post = [];
@@ -489,7 +495,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param array $itemvv Orders
      * @return string Weight
-     */     
+     */
     private function getTotalWeight($itemvv)
     {
         if ($itemvv->getWeight() != 0) {
@@ -505,7 +511,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param object $order Order
      * @return string Description of order
-     */       
+     */
     private function getShipmentDescription($order)
     {
         $aramex_shipment_description = '';
@@ -523,7 +529,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param object $auth_call Feadbeck from Aramex server
      * @return string Errors description
-     */      
+     */
     private function getErrorsText($auth_call)
     {
         if (empty($auth_call->Shipments)) {
@@ -555,11 +561,11 @@ class Bulk extends \Magento\Backend\App\Action
     
     /**
      * Gets errors description
-     * 
+     *
      * @param object $order Order
      * @param object $auth_call Feadbeck from Aramex server
      * @return string Errors description
-     */        
+     */
     private function sendEmail($order, $auth_call)
     {
                             /* send shipment mail */
@@ -625,7 +631,7 @@ class Bulk extends \Magento\Backend\App\Action
      * @param object $order Order
      * @param array $post Post request
      * @return array Array with parameters for request to Aramex server
-     */       
+     */
     private function getParameters($order, $post)
     {
             $totalItems = 0;
@@ -795,7 +801,7 @@ class Bulk extends \Magento\Backend\App\Action
      *
      * @param string $str String for transformation
      * @return array Transformed string to array
-     */       
+     */
     private function unserializeForm($str)
     {
         $returndata = [];

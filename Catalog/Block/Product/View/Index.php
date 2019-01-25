@@ -6,7 +6,7 @@ Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 namespace Aramex\Shipping\Catalog\Block\Product\View;
 
 use Magento\Catalog\Block\Product\AbstractProduct;
@@ -19,31 +19,31 @@ class Index extends AbstractProduct
 {
     /**
      * Object of \Magento\Framework\Registry
-     * 
+     *
      * @var \Magento\Framework\Registry
      */
     private $registry;
      /**
-     * Object of \Magento\Customer\Model\Session
-     * 
+      * Object of \Magento\Customer\Model\Session
+      *
       * @var \Magento\Customer\Model\Session
       */
     private $customerSession;
      /**
-     * Object of \Magento\Customer\Api\CustomerRepositoryInterface
-     * 
+      * Object of \Magento\Customer\Api\CustomerRepositoryInterface
+      *
       * @var \Magento\Customer\Api\CustomerRepositoryInterface
       */
     private $customerRepositoryInterface;
      /**
-     * Object of \Magento\Directory\Model\ResourceModel\Country\CollectionFactory
-     * 
-     * @var \Magento\Directory\Model\ResourceModel\Country\CollectionFactory
+      * Object of \Magento\Directory\Model\ResourceModel\Country\CollectionFactory
+      *
+      * @var \Magento\Directory\Model\ResourceModel\Country\CollectionFactory
       */
     private $countryCollectionFactory;
      /**
       * Object of \Magento\Framework\App\Config\ScopeConfigInterface
-      * 
+      *
       * @var \Magento\Framework\App\Config\ScopeConfigInterface
       */
     private $scopeConfig;
