@@ -2,9 +2,9 @@ define([
     'jquery',
     'jquery/ui'
 ], function ($) {
-    $.widget('aramex.aramexcommon', {
-        _create: function () {
+
             $(document).ready(function () {
+
                 $("#create_aramex_shipment").click(function () {
                     var classList = $(this).attr('class').split('_');
                     aramexpop(classList[1]);
@@ -67,8 +67,5 @@ define([
                 return new ZipValidateUpdter(country_ele, zip_ele, city_ele, optionalZipCountries, required_cls);
             }
 
-        }
-    });
 
-    return $.aramex.aramexcommon;
 });

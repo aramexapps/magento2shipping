@@ -87,6 +87,15 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private $soapClientFactory;
     /**
+     * @var \Magento\Sales\Model\Order\Shipment\Track
+     */
+    private $tracking;
+    /**
+     * @var \Magento\Framework\Registry
+     */
+    private $registry;
+    private $orderInterface;
+    /**
      * Constructor
      * @param \Magento\Backend\App\Action\Context $context
      * @param \Magento\Framework\View\Result\PageFactory resultPageFactory
@@ -96,7 +105,9 @@ class Bulk extends \Magento\Backend\App\Action
      * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
      * @param \Aramex\Shipping\Helper\Data $helper
      * @param \Magento\Sales\Model\Order $order
+     * @param \Magento\Sales\Model\Order\Shipment\Track
      * @param \Magento\Framework\DB\Transaction $transaction
+     * @param \Magento\Framework\Registry
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
@@ -108,7 +119,10 @@ class Bulk extends \Magento\Backend\App\Action
         \Aramex\Shipping\Helper\Data $helper,
         \Magento\Sales\Model\Order $order,
         \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
-        \Magento\Framework\DB\Transaction $transaction
+        \Magento\Sales\Model\Order\Shipment\Track $tracking,
+        \Magento\Framework\DB\Transaction $transaction,
+        \Magento\Sales\Api\Data\OrderInterface $orderInterface,
+        \Magento\Framework\Registry $registry
     ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->scopeConfig = $scopeConfig;
@@ -118,7 +132,10 @@ class Bulk extends \Magento\Backend\App\Action
         $this->helper = $helper;
         $this->order = $order;
         $this->transaction = $transaction;
+        $this->tracking = $tracking;
         $this->soapClientFactory = $soapClientFactory;
+        $this->registry = $registry;
+        $this->orderInterface = $orderInterface;
         parent::__construct($context);
     }
 
@@ -138,7 +155,7 @@ class Bulk extends \Magento\Backend\App\Action
        
         //check "pending" status
         $orders = $this->getOrdersWithPendingStatus($post_out, $post);
-        
+ 
         //domestic metods must be first
         if (!empty($orders)) {
             $responce = "";
@@ -163,7 +180,7 @@ class Bulk extends \Magento\Backend\App\Action
                     $post[$itemvv->getId()] = (string) $_qty;
                 }
              
-                $post['aramex_items'] = $this->getTotalItems($itemsv);
+                $post['aramex_items'] = $this->getTotalItems($itemsv, $isShipped);
                 $post['order_weight'] = (string) $totalWeight;
                 $post['aramex_shipment_shipper_reference'] = $order->getIncrementId();
                 $post['aramex_shipment_info_billing_account'] = 1;
@@ -332,6 +349,17 @@ class Bulk extends \Magento\Backend\App\Action
                         $this->shipmentLoader->setShipment($data);
                         $this->shipmentLoader->setTracking(null);
                         $shipment = $this->shipmentLoader->load();
+
+                        if ($shipment) {
+                            $track = $this->tracking->setNumber(
+                                $auth_call->Shipments->ProcessedShipment->ID
+                            )->setCarrierCode(
+                                "aramex"
+                            )->setTitle(
+                                "Aramex Shipping"
+                            );
+                                        $shipment->addTrack($track);
+                        }
                         if (!empty($data['comment_text'])) {
                             $shipment->addComment(
                                 $data['comment_text'],
@@ -378,12 +406,14 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private function _saveShipment($shipment)
     {
+
         $shipment->getOrder()->setIsInProcess(true);
         $this->transaction->addObject(
             $shipment
         )->addObject(
             $shipment->getOrder()
         )->save();
+        $this->registry->unregister('current_shipment');
     }
     
     /**
@@ -396,7 +426,7 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private function getOrders($key, $order_id, $post)
     {
-        $orders = [];
+        $orderData = [];
         $order = $this->order->loadByIncrementId((int) $order_id);
         $history = [];
         if ($order->getSize()) {
@@ -414,17 +444,17 @@ class Bulk extends \Magento\Backend\App\Action
             }
         }
 
-        if (($order->getStatus() == "pending" || $order->getStatus() == "processing") && !isset($awbno)) {
+        if ($order->getStatus() == "pending" && !isset($awbno)) {
             $shipping = $order->getShippingAddress();
             $shippingCountry = ($shipping) ? $shipping->getData('country_id') : '';
             if ($shippingCountry == $post['aramex_shipment_shipper_country']) {
-                $orders[$key]['method'] = "DOM";
+                $orderData[$key]['method'] = "DOM";
             } else {
-                $orders[$key]['method'] = "EXP";
+                $orderData[$key]['method'] = "EXP";
             }
-            $orders[$key]['order_id'] = $order_id;
+            $orderData [$key]['order_id'] = $order_id;
         }
-        return $orders;
+        return $orderData;
     }
     
     /**
@@ -436,23 +466,27 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private function getOrdersWithPendingStatus($post_out, $post)
     {
+        $ordersData = [];
         if (!empty($post_out["selectedOrders"])) {
             foreach ($post_out["selectedOrders"] as $key => $order_id) {
-                $orders = $this->getOrders($key, $order_id, $post);
+                $ordersData[] = $this->getOrders($key, $order_id, $post);
             }
 
             //domestic metods must be first
             $dom = [];
             $exp = [];
-            foreach ($orders as $key => $order_item) {
-                if ($order_item['method'] == 'DOM') {
-                    $dom[$key]['method'] = "DOM";
-                    $dom[$key]['order_id'] = $order_item['order_id'];
-                } else {
-                    $exp[$key]['method'] = "EXP";
-                    $exp[$key]['order_id'] = $order_item['order_id'];
+            foreach ($ordersData as $ordersData1) {
+                foreach ($ordersData1 as $key => $order_item) {
+                    if ($order_item['method'] == 'DOM') {
+                        $dom[$key]['method'] = "DOM";
+                        $dom[$key]['order_id'] = $order_item['order_id'];
+                    } else {
+                        $exp[$key]['method'] = "EXP";
+                        $exp[$key]['order_id'] = $order_item['order_id'];
+                    }
                 }
             }
+
             $orders = [];
             $total = count($dom) + count($exp);
             for ($i = 0; $i < $total; $i++) {
@@ -475,7 +509,7 @@ class Bulk extends \Magento\Backend\App\Action
      * @param array $itemsv Orders
      * @return array List of products
      */
-    private function getTotalItems($itemsv)
+    private function getTotalItems($itemsv, $isShipped)
     {
         $post = [];
         foreach ($itemsv as $item) {
@@ -542,7 +576,7 @@ class Bulk extends \Magento\Backend\App\Action
                     $auth_call->Notifications->Notification->Message;
             }
         } else {
-            if (count($auth_call->Shipments->ProcessedShipment->Notifications->Notification) > 1) {
+            if (is_array($auth_call->Shipments->ProcessedShipment->Notifications->Notification)) {
                 $notification_string = '';
                 foreach ($auth_call->Shipments->ProcessedShipment->Notifications->Notification as
                     $notification_error) {
@@ -664,8 +698,6 @@ class Bulk extends \Magento\Backend\App\Action
                             'Comments' => $item->getName(),
                             'Reference' => ''
                         ];
-
-                        $totalWeight += $weight;
                         $totalItems += $post[$item->getId()];
                     }
                 }

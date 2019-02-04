@@ -549,6 +549,18 @@ class Shipment extends \Magento\Backend\App\Action
                     $this->shipmentLoader->setShipmentId(null);
                     $this->shipmentLoader->setShipment($data);
                     $this->shipmentLoader->setTracking(null);
+                    $shipment = $this->shipmentLoader->load();
+
+                    if ($shipment) {
+                        $track = $this->tracking->setNumber(
+                            $auth_call->Shipments->ProcessedShipment->ID
+                        )->setCarrierCode(
+                            "aramex"
+                        )->setTitle(
+                            "Aramex Shipping"
+                        );
+                                $shipment->addTrack($track);
+                    }
                     if (!$shipment) {
                         $this->_forward('noroute');
                         return;

@@ -128,7 +128,6 @@ class Rate extends \Magento\Framework\App\Action\Action
                     'CountryCode' => $post['destination_country'],
                 ],
                 'ShipmentDetails' => [
-
                     'PaymentType' => $post['payment_type'],
                     'ProductGroup' => $post['product_group'],
                     'ProductType' => $post['service_type'],
@@ -144,7 +143,7 @@ class Rate extends \Magento\Framework\App\Action\Action
             try {
                 $results = $soapClient->CalculateRate($params);
                 if ($results->HasErrors) {
-                    if (count($results->Notifications->Notification) > 1) {
+                    if (is_array($results->Notifications->Notification) > 1) {
                         $error = "";
                         foreach ($results->Notifications->Notification as $notify_error) {
                             $error.='Aramex: ' . $notify_error->Code . ' - ' . $notify_error->Message . "<br>";

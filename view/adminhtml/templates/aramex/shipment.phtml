@@ -9,6 +9,9 @@
 */
 ?>
 <?php
+
+
+
 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 $_order = $objectManager->create('Magento\Sales\Model\Order')->load($this->order_id);
 $shipping = $_order->getShippingAddress();
@@ -17,8 +20,8 @@ $customer = $objectManager->create('Magento\Customer\Model\Customer')->load($cus
 $countryCollection = $objectManager->create('Magento\Directory\Model\Config\Source\Country')->toOptionArray();
 $payment = $_order->getPayment();
 $method = $payment->getMethodInstance();
-$methodTitle = $method->getTitle();
-$cod = (strpos($methodTitle, "Cash On Delivery") === 0)? true: false;
+$methodTitle = $method->getCode();
+$cod = (strpos($methodTitle, "cashondelivery") === 0)? true: false;
 
 $payment = $_order->getPayment();
 
@@ -80,13 +83,14 @@ if ($shipping->getData('region_id')) {
 $formSession = $objectManager->create('\Magento\Backend\Model\Session');
 $formData = $formSession->getData('form_data');
 $session = false;
-
 $urlInterface = \Magento\Framework\App\ObjectManager::getInstance()->get('Magento\Framework\UrlInterface');
 $currentUrl = $urlInterface->getCurrentUrl();
 $formSession->setPreviousUrl($currentUrl);
-if (count($formData) > 0) {
+
+if (!empty($formData)) {
     $session = true;
 }
+
 $scopeConfig = $objectManager->create('\Magento\Framework\App\Config\ScopeConfigInterface');
 $account = $scopeConfig->getValue('aramex/settings/account_number', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
 $name = $scopeConfig->getValue('aramex/shipperdetail/name', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
@@ -101,6 +105,7 @@ $phone = $scopeConfig->getValue('aramex/shipperdetail/phone', \Magento\Store\Mod
 $mobile = $scopeConfig->getValue('aramex/shipperdetail/mobile', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
 $flag = $scopeConfig->getValue('aramex/config/sandbox_flag', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
 $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+
 ?>
 
 <div data-mage-init='{"aramexcommon":{}}'></div>
@@ -108,7 +113,6 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
     require([ 'jquery', 'jquery/ui'], function($){
         //<![CDATA[
         optionalZipCountries = <?php echo $objectManager->get('Magento\Directory\Helper\Data')->getCountriesWithOptionalZip(true); ?>;
-
 
         myObj={
             print_label_id:'',
@@ -896,9 +900,10 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
                     <div class="text_short">
                         <label>Additional Services</label>
-                        <?php $_type = $_order->getPayment()->getMethodInstance()->getCode();
+                        <?php 
+                        $_type = $_order->getPayment()->getMethodInstance()->getCode();
+                        $isCode = ($_type === "cashondelivery") ? "CODS" : "";
                         $formShipment = (isset($formData['aramex_shipment_info_service_type'][0]))?$formData['aramex_shipment_info_service_type'][0]:"";
-
                         ?>
                         <?php $_type = ($session) ? $formShipment : $_type; ?>
 
@@ -922,7 +927,8 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                     if (in_array($val['value'], $allowed_domestic_additional_services)) {
                                         ?> 
                                         <option 
-                                        <?php echo (($_type == $val['value'] and $_group == 'DOM') || $cod === true) ? 'selected="selected"' : ''; ?>
+
+                                        <?php echo (($isCode === $val['value'] ) ) ? 'selected="selected"' : ''; ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="dom_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             class="DOM local"><?php echo $block->escapeHtml($val['label']); ?>
@@ -939,7 +945,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                 foreach ($international_additional_services as $key => $val) {
                                     if (in_array($val['value'], $allowed_international_additional_services)) {
                                         ?>
-                                        <option <?php echo $block->escapeHtmlAttr(($_type == $val['value'] and $_group == 'DOM' ) ? 'selected="selected"' : ''); ?>
+                                        <option <?php echo ($isCode === $val['value'] ) ? 'selected="selected"' : ''; ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="exp_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             class="non-local EXP"><?php echo $block->escapeHtml($val['label']); ?></option>
@@ -1028,7 +1034,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <label>Custom Amount</label><input class="" type="text"
                                                            id="aramex_shipment_info_custom_amount"
                                                            name="aramex_shipment_info_custom_amount"
-                                                           value="<?php echo $block->escapeHtmlAttr((( $dom  == false)? $_amount: "")); ?>"/>
+                                                           value="<?php echo $block->escapeHtmlAttr(($dom  == false)? $_amount: ""); ?>"/>
                     </div>
 
 
