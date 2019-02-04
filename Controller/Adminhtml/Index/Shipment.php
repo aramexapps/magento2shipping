@@ -85,11 +85,6 @@ class Shipment extends \Magento\Backend\App\Action
      */
     private $order;
     /**
-     * Object of \Magento\Backend\Model\Session
-     * @var \Magento\Backend\Model\Session
-     */
-    private $backEndSession;
-    /**
      * object of \Magento\Framework\DB\Transaction
      * @var \Magento\Framework\DB\Transaction
      */
@@ -121,7 +116,6 @@ class Shipment extends \Magento\Backend\App\Action
      * @param \Aramex\Shipping\Helper\Data $helper
      * @param \Magento\Sales\Model\Order $order
      * @param \Magento\Framework\DB\Transaction $transaction
-     * @param \Magento\Backend\Model\Session $session
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
@@ -135,8 +129,7 @@ class Shipment extends \Magento\Backend\App\Action
         \Magento\Sales\Model\Order $order,
         \Magento\Framework\DB\Transaction $transaction,
         \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
-        \Magento\Sales\Model\Order\Shipment\Track $tracking,
-        Session $session
+        \Magento\Sales\Model\Order\Shipment\Track $tracking
     ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->scopeConfig = $scopeConfig;
@@ -147,7 +140,6 @@ class Shipment extends \Magento\Backend\App\Action
         $this->resultJsonFactory = $resultJsonFactory;
         $this->helper = $helper;
         $this->order = $order;
-        $this->backEndSession = $session;
         $this->transaction = $transaction;
         $this->soapClientFactory = $soapClientFactory;
         $this->tracking = $tracking;
@@ -431,7 +423,7 @@ class Shipment extends \Magento\Backend\App\Action
                 'ReportID' => $report_id,
                 'ReportType' => 'URL'
             ];
-        $this->backEndSession->setData("form_data", $post);
+        $this->_session->setData("form_data", $post);
         return $major_par;
     }
     

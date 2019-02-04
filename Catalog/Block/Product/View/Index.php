@@ -17,12 +17,6 @@ use \Magento\Customer\Model\Session;
  */
 class Index extends AbstractProduct
 {
-    /**
-     * Object of \Magento\Framework\Registry
-     *
-     * @var \Magento\Framework\Registry
-     */
-    private $registry;
      /**
       * Object of \Magento\Customer\Model\Session
       *
@@ -41,18 +35,10 @@ class Index extends AbstractProduct
       * @var \Magento\Directory\Model\ResourceModel\Country\CollectionFactory
       */
     private $countryCollectionFactory;
-     /**
-      * Object of \Magento\Framework\App\Config\ScopeConfigInterface
-      *
-      * @var \Magento\Framework\App\Config\ScopeConfigInterface
-      */
-    private $scopeConfig;
 
     /**
      * Constructor
      *
-     * @param \Magento\Framework\Registry                                      $registry
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface               $scopeConfig
      * @param \Magento\Catalog\Block\Product\Context                           $context
      * @param \Magento\Customer\Model\Session                                  $customerSession
      * @param \Magento\Customer\Api\CustomerRepositoryInterface                $customerRepositoryInterface
@@ -60,15 +46,12 @@ class Index extends AbstractProduct
      * @param \Magento\Framework\ObjectManagerInterface                        $objectmanager
      */
     public function __construct(
-        \Magento\Framework\Registry $registry,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Catalog\Block\Product\Context $context,
         Session $customerSession,
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
         \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory,
         \Magento\Framework\ObjectManagerInterface $objectmanager
     ) {
-        $this->registry = $registry;
         $this->scopeConfig = $scopeConfig;
         $this->customerRepositoryInterface = $customerRepositoryInterface;
         $this->countryCollectionFactory = $countryCollectionFactory;
