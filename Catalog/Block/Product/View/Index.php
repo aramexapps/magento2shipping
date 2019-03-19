@@ -50,7 +50,9 @@ class Index extends AbstractProduct
         Session $customerSession,
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
         \Magento\Directory\Model\ResourceModel\Country\CollectionFactory $countryCollectionFactory,
-        \Magento\Framework\ObjectManagerInterface $objectmanager
+        \Magento\Framework\ObjectManagerInterface $objectmanager,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\Registry $registry
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->customerRepositoryInterface = $customerRepositoryInterface;
@@ -58,6 +60,7 @@ class Index extends AbstractProduct
         $this->context = $context;
         $this->_objectManager = $objectmanager;
         $this->customerSession = $customerSession;
+        $this->registry = $registry;
         parent::__construct($context);
     }
 
