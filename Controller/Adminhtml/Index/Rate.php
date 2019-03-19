@@ -143,7 +143,7 @@ class Rate extends \Magento\Framework\App\Action\Action
             try {
                 $results = $soapClient->CalculateRate($params);
                 if ($results->HasErrors) {
-                    if (is_array($results->Notifications->Notification) > 1) {
+                    if (is_array($results->Notifications->Notification)) {
                         $error = "";
                         foreach ($results->Notifications->Notification as $notify_error) {
                             $error.='Aramex: ' . $notify_error->Code . ' - ' . $notify_error->Message . "<br>";
