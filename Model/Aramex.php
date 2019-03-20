@@ -417,6 +417,9 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $params['ShipmentDetails']['Services'] = "";
             }
             $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title);
+            if (isset($requestFromAramex['response']['error'])) {
+				continue;
+            }
             $priceArr[] = $requestFromAramex['priceArr'];
         }
 

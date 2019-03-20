@@ -13,10 +13,5 @@
                 <specificerrmsg>This shipping method is currently unavailable.If you would like to ship using this shipping method, please contact us.</specificerrmsg>
             </aramex>
         </carriers>
-        <aramex>
-            <settings>
-                <cod_account_number>888888</cod_account_number>
-            </settings>
-        </aramex>
     </default>
 </config>
