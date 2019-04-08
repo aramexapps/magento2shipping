@@ -409,6 +409,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'PreferredCurrencyCode' => $baseCurrencyCode
             ];
         $priceArr = [];
+		$requestFromAramex = [];
         foreach ($allowed_methods as $m_value => $m_title) {
             $params['ShipmentDetails']['ProductType'] = $m_value;
             if ($m_value == "CDA") {
