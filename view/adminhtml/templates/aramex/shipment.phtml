@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Description:  Aramex Shipping Magento2 plugin
  * Version:      1.0.0
@@ -6,7 +6,7 @@
  * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
  * License:      GPL2
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 ?>
 <?php
 
@@ -46,7 +46,7 @@ foreach ($itemsv as $itemvv) {
     if ($itemvv->getQtyOrdered() > $itemvv->getQtyShipped()) {
         $itemscount += $itemvv->getQtyOrdered() - $itemvv->getQtyShipped();
 
-    } else if ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
+    } elseif ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
         $isShipped = true;
     }
 
@@ -54,7 +54,7 @@ foreach ($itemsv as $itemvv) {
     $_shippedWeight += $itemvv->getQtyShipped() * $itemvv->getWeight();
 
 }
-if($itemscount == 0) {
+if ($itemscount == 0) {
     $_shippedPrice = 0;
     $_shippedWeight = 0;
 }
@@ -62,22 +62,22 @@ if($itemscount == 0) {
 $state = "";
 
 
-if($shipping != null){
-if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
-    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
-    $state = $region->getName();
-} else {
-    $state = $shipping->getData('region');
-}
+if ($shipping != null) {
+    if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $state = $region->getName();
+    } else {
+        $state = $shipping->getData('region');
+    }
 
 
-$billing_state = "";
-if ($shipping->getData('region_id')) {
-    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
-    $billing_state = $region->getName();
-} else {
-    $billing_state = $shipping->getData('region');
-}
+    $billing_state = "";
+    if ($shipping->getData('region_id')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $billing_state = $region->getName();
+    } else {
+        $billing_state = $shipping->getData('region');
+    }
 }
 
 $formSession = $objectManager->create('\Magento\Backend\Model\Session');
@@ -108,7 +108,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
 ?>
 
-<div style="position:absolute; width:1px;" data-mage-init='{"aramexcommon":{}}'></div>
+<div style= 'position:absolute; height:1px;' data-mage-init='{"aramexcommon":{}}'></div>
 <script type="text/javascript">
     require([ 'jquery', 'jquery/ui'], function($){
         //<![CDATA[
@@ -300,7 +300,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
         $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
         $isSecure = $storeManager->getStore()->isCurrentlySecure();
         ?>
-        var  system_base_url = "<?php echo $block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB,$isSecure));?>";
+        var  system_base_url = "<?php echo $block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB, $isSecure));?>";
 
 
         function AutoSearchControls(type,search_city){
@@ -537,14 +537,14 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <label>Payment</label>
                         <select class="aramex_all_options" name="aramex_shipment_info_billing_account"
                                 id="aramex_shipment_info_billing_account_id" >
-                            <?php if (!$isShipped or true): ?>
+                            <?php if (!$isShipped or true) : ?>
                                 <option
                                     value="1" <?php echo $block->escapeHtmlAttr(($session and $formData['aramex_shipment_info_billing_account'] == '1') ? 'selected="selected"' : '') ?>>
                                     Shipper Account
                                 </option>
                             <?php endif; ?>
                             <option
-                                value="2" <?php echo $block->escapeHtmlAttr(($session and $formData['aramex_shipment_info_billing_account'] == '2') ? 'selected="selected"' : '' ) ?>>
+                                value="2" <?php echo $block->escapeHtmlAttr(($session and $formData['aramex_shipment_info_billing_account'] == '2') ? 'selected="selected"' : '') ?>>
                                 Consignee Account
                             </option>
                             <option
@@ -613,7 +613,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                 ?>
                                 <option value="<?php echo $block->escapeHtmlAttr($country['value']) ?>" <?php if ($_country) {
                                     echo ($_country == $country['value']) ? 'selected="selected"' : '';
-                                } ?> ><?php echo $block->escapeHtml($country['label']) ?></option>
+                                               } ?> ><?php echo $block->escapeHtml($country['label']) ?></option>
                                 <?php
                             }
                             ?>
@@ -730,7 +730,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                                                                value="<?php echo $block->escapeHtmlAttr($_postcode); ?>"/>
                     </div>
                     <div class="text_short">
-                        <?php $_state = ($shipping) ? $state : ''; ?>
+                        <?php $_state = ($shipping) ? $shipping->getData('region') : ''; ?>
                         <?php $_state = ($session) ? $formData['aramex_shipment_receiver_state'] : $_state; ?>
                         <label>State</label><input type="text" id="aramex_shipment_receiver_state"
                                                    name="aramex_shipment_receiver_state"
@@ -748,7 +748,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <label>Mobile</label><input class="required" type="text" id="aramex_shipment_receiver_mobile"
                                                    name="aramex_shipment_receiver_mobile"
                                                    value="<?php echo $block->escapeHtmlAttr($_receiver_mobile); ?>"/>
-                    </div>					
+                    </div>                    
                 </div>
             </FIELDSET>
 
@@ -827,8 +827,8 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         }
                         ?>
                         <?php
-                        $allowed_domestic_methods_apply = array();
-                        $allowed_international_methods_apply = array();
+                        $allowed_domestic_methods_apply = [];
+                        $allowed_international_methods_apply = [];
 
 
                         $allowed_domestic_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
@@ -900,7 +900,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
                     <div class="text_short">
                         <label>Additional Services</label>
-                        <?php 
+                        <?php
                         $_type = $_order->getPayment()->getMethodInstance()->getCode();
                         $isCode = ($_type === "cashondelivery") ? "CODS" : "";
                         $formShipment = (isset($formData['aramex_shipment_info_service_type'][0]))?$formData['aramex_shipment_info_service_type'][0]:"";
@@ -967,15 +967,15 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
                             <option value="P" <?php if ($_type == 'P') {
                                 echo 'selected="selected"';
-                            } ?>>Prepaid
+                                              } ?>>Prepaid
                             </option>
                             <option value="C" <?php if ($_type == 'C') {
                                 echo 'selected="selected"';
-                            } ?>>Collect
+                                              } ?>>Collect
                             </option>
                             <option value="3" <?php if ($_type == '3') {
                                 echo 'selected="selected"';
-                            } ?>>Third Party
+                                              } ?>>Third Party
                             </option>
 
                         </select>
@@ -998,19 +998,19 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
                             <option id="CASH" value="CASH" <?php if ($_option == 'CASH') {
                                 echo 'selected="selected"';
-                            } ?>>Cash
+                                                           } ?>>Cash
                             </option>
                             <option id="ACCT" value="ACCT" <?php if ($_option == 'ACCT') {
                                 echo 'selected="selected"';
-                            } ?>>Account
+                                                           } ?>>Account
                             </option>
                             <option id="PPST" value="PPST" <?php if ($_option == 'PPST') {
                                 echo 'selected="selected"';
-                            } ?>>Prepaid Stock
+                                                           } ?>>Prepaid Stock
                             </option>
                             <option id="CRDT" value="CRDT" <?php if ($_option == 'CRDT') {
                                 echo 'selected="selected"';
-                            } ?>>Credit
+                                                           } ?>>Credit
                             </option>
 
                         </select>
@@ -1042,7 +1042,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <?php $_code = ($session) ? $formData['aramex_shipment_currency_code_custom'] : $_order->getData('base_currency_code'); ?>
                         <label>Custom Currency</label><input type="text" class="" id="aramex_shipment_currency_code_custom"
                                                       name="aramex_shipment_currency_code_custom"
-                                                      value="<?php echo $block->escapeHtmlAttr( (($dom  == false)? $_code: "")); ?>"/>
+                                                      value="<?php echo $block->escapeHtmlAttr((($dom  == false)? $_code: "")); ?>"/>
                     </div>  
                     
                     <div class="text_short">
@@ -1098,32 +1098,32 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <label>Description</label>
                         <textarea rows="4" cols="31" type="text" id="aramex_shipment_description"
                                   name="aramex_shipment_description" style="display: none;"><?php
-                            $itemsnamecounter = 1;
-                            $item_supplier_id = '';
-                            foreach ($_order->getAllVisibleItems() as $itemname) {
-                                if ($itemname->getQtyOrdered() > $itemname->getQtyShipped()) {
-                                    echo $block->escapeHtmlAttr($itemname->getId()) . ' - ' . trim($itemname->getName());
-                                }
-                                $itemsnamecounter++;
-                                $supplier_different = false;
-                                $atleast_item_shipped = false;
-                                if (!$item_supplier_id) {
-                                    $item_supplier_id = $itemname->getUdropshipVendor();
-                                } else {
-                                    if ($item_supplier_id != $itemname->getUdropshipVendor()) {
-                                        if (!$supplier_different) {
-                                            $supplier_different = true;
+                                    $itemsnamecounter = 1;
+                                    $item_supplier_id = '';
+                                    foreach ($_order->getAllVisibleItems() as $itemname) {
+                                        if ($itemname->getQtyOrdered() > $itemname->getQtyShipped()) {
+                                            echo $block->escapeHtmlAttr($itemname->getId()) . ' - ' . trim($itemname->getName());
+                                        }
+                                        $itemsnamecounter++;
+                                        $supplier_different = false;
+                                        $atleast_item_shipped = false;
+                                        if (!$item_supplier_id) {
+                                            $item_supplier_id = $itemname->getUdropshipVendor();
+                                        } else {
+                                            if ($item_supplier_id != $itemname->getUdropshipVendor()) {
+                                                if (!$supplier_different) {
+                                                    $supplier_different = true;
+                                                }
+                                            }
+                                        }
+
+                                        if ($itemname->getQtyOrdered() == $itemname->getQtyShipped()) {
+                                            if (!$atleast_item_shipped) {
+                                                $atleast_item_shipped = true;
+                                            }
                                         }
                                     }
-                                }
-
-                                if ($itemname->getQtyOrdered() == $itemname->getQtyShipped()) {
-                                    if (!$atleast_item_shipped) {
-                                        $atleast_item_shipped = true;
-                                    }
-                                }
-                            }
-                            ?>
+                                    ?>
                         </textarea>
 
 
@@ -1153,7 +1153,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                             style="float: left; padding-left: 5px;"><?php echo $block->escapeHtml($_order->getData('base_currency_code')); ?></div>
                     </div>
                     <div class="text_short">
-			<label>Number of Pieces</label><input type="text"  name="number_pieces" value="1" style="width: 165px; float: left;" /><div style="float: left; padding-left: 5px;"></div>
+            <label>Number of Pieces</label><input type="text"  name="number_pieces" value="1" style="width: 165px; float: left;" /><div style="float: left; padding-left: 5px;"></div>
                     </div>
                     <?php if ($payment->getData('method') == 'ig_cashondelivery') { ?>
                         <?php if ($supplier_different) { ?>
@@ -1225,7 +1225,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                     </tr>
                                     <?php
                                     foreach ($itemsv as $item) {
-                                        if ($item->getQtyOrdered() > $item->getQtyShipped() ) {
+                                        if ($item->getQtyOrdered() > $item->getQtyShipped()) {
                                             ?>
                                             <tr id="item<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                 class="aramex_item_tobe_shipped">
@@ -1240,7 +1240,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                 ?>
                                                 <td class="aramex_item_name">
                                                         <span
-                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(mb_substr($item->getName(), 0, 21)); ?>
+                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(substr($item->getName(), 0, 21)); ?>
                                                             ...</span>
                                                     <input type="hidden"
                                                            id="aramex_items_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
@@ -1278,7 +1278,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                         </td>
                                         <td>
                                             <span id="items_tobe_shipped_number">
-                    <?php echo $block->escapeHtml($itemscount); ?>
+                                <?php echo $block->escapeHtml($itemscount); ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -1303,7 +1303,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
             </div>
             <div class="aramex_clearer"></div>
             <div style="float: right;margin-bottom: 20px;margin-top: -11px;">
-                <?php if ($_order->canShip()): ?>
+                <?php if ($_order->canShip()) : ?>
                     <input name="aramex_return_shipment_creation_date" type="hidden" value="create"/>
                     <button id="aramex_shipment_creation_submit_id" type="submit"
                             name="aramex_shipment_creation_submit">Create Shipment
@@ -1311,7 +1311,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                 <?php endif; ?>
 
                 <?php
-                $history = array();
+                $history = [];
                 if ($_order->getShipmentsCollection()->count()) {
                     foreach ($_order->getShipmentsCollection() as $_shipment) {
                         if ($_shipment->getCommentsCollection()->count()) {
@@ -1322,18 +1322,19 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                     }
                 }
 
-        $aramex_return_button = false;
-        if (count($history)) {
-            foreach ($history as $_history) {
-                $awbno = strstr($_history, " - Order No", true);
-                $awbno = trim($awbno, "Aramex Shipment Order AWB No. ");
-                break;
-            }
-            if (isset($awbno)) {
-                if ((int)$awbno)
-                    $aramex_return_button = true;
-            }
-        }
+                $aramex_return_button = false;
+                if (count($history)) {
+                    foreach ($history as $_history) {
+                        $awbno = strstr($_history, " - Order No", true);
+                        $awbno = trim($awbno, "Aramex Shipment Order AWB No. ");
+                        break;
+                    }
+                    if (isset($awbno)) {
+                        if ((int)$awbno) {
+                            $aramex_return_button = true;
+                        }
+                    }
+                }
 
                 if (!$_order->canShip() && $aramex_return_button) {
                     ?>
@@ -1384,7 +1385,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
     var aramex_shipment_shipper_postal = document.getElementById('aramex_shipment_shipper_postal').value;
     var aramex_shipment_shipper_state = document.getElementById('aramex_shipment_shipper_state').value;
     var aramex_shipment_shipper_phone = document.getElementById('aramex_shipment_shipper_phone').value;
-	var aramex_shipment_shipper_mobile = document.getElementById('aramex_shipment_shipper_mobile').value;
+    var aramex_shipment_shipper_mobile = document.getElementById('aramex_shipment_shipper_mobile').value;
 
     var aramex_shipment_receiver_name = document.getElementById('aramex_shipment_receiver_name').value;
     var aramex_shipment_receiver_email = document.getElementById('aramex_shipment_receiver_email').value;
@@ -1395,23 +1396,23 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
     var aramex_shipment_receiver_postal = document.getElementById('aramex_shipment_receiver_postal').value;
     var aramex_shipment_receiver_state = document.getElementById('aramex_shipment_receiver_state').value;
     var aramex_shipment_receiver_phone = document.getElementById('aramex_shipment_receiver_phone').value;
-	var aramex_shipment_receiver_mobile = document.getElementById('aramex_shipment_receiver_mobile').value;
+    var aramex_shipment_receiver_mobile = document.getElementById('aramex_shipment_receiver_mobile').value;
 
 
 
     $("#aramex_shipment_info_billing_account_id").change(function () {
-		
+        
                     resetShipperDetail(this);
                 });
 
 <?php
-        if (!$_order->canShip() && $aramex_return_button) { ?>
-		
+if (!$_order->canShip() && $aramex_return_button) { ?>
+        
             $("#aramex_shipment_info_billing_account_id") . val(2);
             $("#aramex_shipment_info_billing_account_id") . trigger('change');
-			
-			
-        <?php        }
+            
+            
+<?php        }
 ?>
     function resetShipperDetail(el) {
         var elValue = el.value;
@@ -1419,7 +1420,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
 
 
         if (elValue == 2) {
-			
+            
             document.getElementById('aramex_shipment_shipper_name').value = aramex_shipment_receiver_name;
             document.getElementById('aramex_shipment_shipper_email').value = aramex_shipment_receiver_email;
             document.getElementById('aramex_shipment_shipper_company').value = aramex_shipment_receiver_company;
@@ -1429,7 +1430,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
             document.getElementById('aramex_shipment_shipper_postal').value = aramex_shipment_receiver_postal;
             document.getElementById('aramex_shipment_shipper_state').value = aramex_shipment_receiver_state;
             document.getElementById('aramex_shipment_shipper_phone').value = aramex_shipment_receiver_phone;
-			document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_receiver_mobile;
+            document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_receiver_mobile;
             document.getElementById('aramex_shipment_receiver_name').value = aramex_shipment_shipper_name;
             document.getElementById('aramex_shipment_receiver_email').value = aramex_shipment_shipper_email;
             document.getElementById('aramex_shipment_receiver_company').value = aramex_shipment_shipper_company;
@@ -1439,7 +1440,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
             document.getElementById('aramex_shipment_receiver_postal').value = aramex_shipment_shipper_postal;
             document.getElementById('aramex_shipment_receiver_state').value = aramex_shipment_shipper_state;
             document.getElementById('aramex_shipment_receiver_phone').value = aramex_shipment_shipper_phone;
-			document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_shipper_mobile;
+            document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_shipper_mobile;
             flag = 1;
         } else if (elValue == 3) {
             document.getElementById('aramex_shipment_shipper_name').value = "";
@@ -1451,7 +1452,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
             document.getElementById('aramex_shipment_shipper_postal').value = "";
             document.getElementById('aramex_shipment_shipper_state').value = "";
             document.getElementById('aramex_shipment_shipper_phone').value = "";
-			document.getElementById('aramex_shipment_shipper_mobile').value = "";
+            document.getElementById('aramex_shipment_shipper_mobile').value = "";
             document.getElementById('aramex_shipment_info_payment_type').value = '3';
 
             document.getElementById('ASCC').style.display = 'block';
@@ -1477,7 +1478,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
                 document.getElementById('aramex_shipment_receiver_postal').value = aramex_shipment_receiver_postal;
                 document.getElementById('aramex_shipment_receiver_state').value = aramex_shipment_receiver_state;
                 document.getElementById('aramex_shipment_receiver_phone').value = aramex_shipment_receiver_phone;
-				document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_receiver_mobile;
+                document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_receiver_mobile;
 
                 document.getElementById('aramex_shipment_shipper_name').value = aramex_shipment_shipper_name;
                 document.getElementById('aramex_shipment_shipper_email').value = aramex_shipment_shipper_email;
@@ -1488,7 +1489,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
                 document.getElementById('aramex_shipment_shipper_postal').value = aramex_shipment_shipper_postal;
                 document.getElementById('aramex_shipment_shipper_state').value = aramex_shipment_shipper_state;
                 document.getElementById('aramex_shipment_shipper_phone').value = aramex_shipment_shipper_phone;
-				document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_shipper_mobile;
+                document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_shipper_mobile;
 
                 document.getElementById('aramex_shipment_info_payment_type').value = 'P';
 
@@ -1513,7 +1514,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
                 document.getElementById('aramex_shipment_shipper_postal').value = aramex_shipment_shipper_postal;
                 document.getElementById('aramex_shipment_shipper_state').value = aramex_shipment_shipper_state;
                 document.getElementById('aramex_shipment_shipper_phone').value = aramex_shipment_shipper_phone;
-				document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_shipper_mobile;
+                document.getElementById('aramex_shipment_shipper_mobile').value = aramex_shipment_shipper_mobile;
 
                 document.getElementById('aramex_shipment_receiver_name').value = aramex_shipment_receiver_name;
                 document.getElementById('aramex_shipment_receiver_email').value = aramex_shipment_receiver_email;
@@ -1524,7 +1525,7 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
                 document.getElementById('aramex_shipment_receiver_postal').value = aramex_shipment_receiver_postal;
                 document.getElementById('aramex_shipment_receiver_state').value = aramex_shipment_receiver_state;
                 document.getElementById('aramex_shipment_receiver_phone').value = aramex_shipment_receiver_phone;
-				document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_receiver_mobile;
+                document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_receiver_mobile;
 
                 document.getElementById('aramex_shipment_info_payment_type').value = 'P';
 
@@ -1679,11 +1680,11 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
     var messages_content;
     <?php
     if (strpos($currentUrl, "aramexpopup/show") !== false) {
-    ?>
+        ?>
     $("#messages").ready(function () {
         $("#aramex_messages").html($("#messages").html());
     });
-    <?php
+        <?php
     }
     ?>
 

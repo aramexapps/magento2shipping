@@ -104,6 +104,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
 
     private $objectFactory;
 
+    private $checkoutSession;
+
      /**
       * Constructor
       *
@@ -161,6 +163,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         Session $sessionCustomer,
         \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
         \Magento\Framework\DataObjectFactory $objectFactory,
+        \Magento\Checkout\Model\Session $checkoutSession,
         array $data = []
     ) {
         $this->_rateResultFactory = $rateResultFactory;
@@ -176,6 +179,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $this->_code = $helper->getCode();
         $this->soapClientFactory = $soapClientFactory;
         $this->objectFactory = $objectFactory;
+        $this->checkoutSession = $checkoutSession;
         parent::__construct(
             $scopeConfig,
             $rateErrorFactory,
@@ -409,7 +413,6 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'PreferredCurrencyCode' => $baseCurrencyCode
             ];
         $priceArr = [];
-		$requestFromAramex = [];
         foreach ($allowed_methods as $m_value => $m_title) {
             $params['ShipmentDetails']['ProductType'] = $m_value;
             if ($m_value == "CDA") {
@@ -419,10 +422,12 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             }
             $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title);
             if (isset($requestFromAramex['response']['error'])) {
-				continue;
+                continue;
             }
             $priceArr[] = $requestFromAramex['priceArr'];
         }
+
+        $this->checkoutSession->setAramexShippingData($priceArr);
 
         $result = $this->sendResult($priceArr, $requestFromAramex);
         return $result;
@@ -440,8 +445,10 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     {
         $priceArr = [];
         $baseUrl = $this->helper->getWsdlPath();
-        $soapClient = $this->soapClientFactory->create($baseUrl .
-                    'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
+        $soapClient = $this->soapClientFactory->create(
+            "https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc?wsdl",
+            ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]
+        );
         try {
             $results = $soapClient->CalculateRate($params);
             if ($results->HasErrors) {
@@ -458,11 +465,20 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $response['type'] = 'error';
             } else {
                 $response['type'] = 'success';
-                $priceArr[$m_value] = [
+                if (isset($results->RateDetails)) {
+                    $priceArr[$m_value] = [
+                        'label' => $m_title,
+                        'amount' => $results->TotalAmount->Value - $results->RateDetails->OtherAmount5,
+                        'currency' => $results->TotalAmount->CurrencyCode,
+                        'cod' => $results->RateDetails->OtherAmount5
+                        ];
+                } else {
+                    $priceArr[$m_value] = [
                         'label' => $m_title,
                         'amount' => $results->TotalAmount->Value,
                         'currency' => $results->TotalAmount->CurrencyCode
                         ];
+                }
             }
         } catch (\Exception $e) {
             $response['type'] = 'error';

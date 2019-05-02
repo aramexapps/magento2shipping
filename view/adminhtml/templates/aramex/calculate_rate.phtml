@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Description:  Aramex Shipping Magento2 plugin
  * Version:      1.0.0
@@ -6,7 +6,7 @@
  * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
  * License:      GPL2
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
-*/
+ */
 ?>
 <?php
 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
@@ -26,21 +26,21 @@ $flag = $scopeConfig->getValue('aramex/config/sandbox_flag', \Magento\Store\Mode
 <?php
 //calculating total weight of current order
 $state = "";
-if($shipping != null){
-if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
-    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
-    $state = $region->getName();
-} else {
-    $state = $shipping->getData('region');
-}
+if ($shipping != null) {
+    if (($shipping->getData('region_id')) && ($shipping->getData('country_id') == 'US')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $state = $region->getName();
+    } else {
+        $state = $shipping->getData('region');
+    }
 
-$billing_state = "";
-if ($shipping->getData('region_id')) {
-    $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
-    $billing_state = $region->getName();
-} else {
-    $billing_state = $shipping->getData('region');
-}
+    $billing_state = "";
+    if ($shipping->getData('region_id')) {
+        $region = $objectManager->create('\Magento\Directory\Model\Region')->load($shipping->getData('region_id'));
+        $billing_state = $region->getName();
+    } else {
+        $billing_state = $shipping->getData('region');
+    }
 }
 $totalWeight = 0;
 $itemscount = 0;
@@ -49,7 +49,7 @@ $itemsv = $_order->getAllVisibleItems();
 foreach ($itemsv as $itemvv) {
     if ($itemvv->getQtyOrdered() > $itemvv->getQtyShipped()) {
         $itemscount += $itemvv->getQtyOrdered() - $itemvv->getQtyShipped();
-    } else if ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
+    } elseif ($itemvv->getQtyOrdered() == $itemvv->getQtyShipped()) {
         $itemscount += $itemvv->getQtyShipped();
     }
     if ($itemvv->getWeight() != 0) {
@@ -104,18 +104,18 @@ optionalZipCountries = <?php echo $objectManager->get('Magento\Directory\Helper\
 
 var origin_country_map = zipValidateMaker('origin_country','origin_zipcode','origin_city',optionalZipCountries,'required-entry');
 var destination_country_map = zipValidateMaker('destination_country','destination_zipcode','destination_city',optionalZipCountries,'required-entry');
-<?php 
+<?php
     $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
     $isSecure = $storeManager->getStore()->isCurrentlySecure();
 ?>
-var  new_system_base_url = "<?php echo $block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB,$isSecure));?>";
+var  new_system_base_url = "<?php echo $block->escapeUrl($storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB, $isSecure));?>";
 $(function(){
-    	$("#aramex_rate_calculate").click(function(){
-		$('.arm_country').trigger('change');
-	});
+        $("#aramex_rate_calculate").click(function(){
+        $('.arm_country').trigger('change');
+    });
         
     origin_country_map.checkoptions();
-	destination_country_map.checkoptions();
+    destination_country_map.checkoptions();
         
         var country_param_origin = $("#origin_country").val();
          $("#origin_country").change(function(){
@@ -224,11 +224,11 @@ $(function(){
                             $_countries = $objectManager->create('Magento\Directory\Model\Config\Source\Country')->toOptionArray();
                             ?>
                             <select name="origin_country" class="arm_country" id="origin_country">
-                                <?php if (count($_countries) > 0): ?>
-                                    <?php foreach ($_countries as $_country): ?>
+                                <?php if (count($_countries) > 0) : ?>
+                                    <?php foreach ($_countries as $_country) : ?>
                                         <option value="<?php echo $_country['value'] ?>" <?php if ($country) {
-                                    echo ($country == $_country['value']) ? "selected='selected'" : '' ;
-                                } ?>>
+                                            echo ($country == $_country['value']) ? "selected='selected'" : '' ;
+                                                       } ?>>
                                         <?php echo $block->escapeHtml($_country['label']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -258,14 +258,14 @@ $(function(){
                         <div class="field fl width-270">
                             <label>Country <span class="red">*</span></label> 
                             <select name="destination_country" class="arm_country" id="destination_country" >
-                                <?php if (count($_countries) > 0): ?>
-                                        <?php foreach ($_countries as $_country): ?>
+                                <?php if (count($_countries) > 0) : ?>
+                                        <?php foreach ($_countries as $_country) : ?>
                                         <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>"  <?php if ($shipping) {
-                                        echo $block->escapeHtml(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
-                                    } ?>>
-                                        <?php echo $block->escapeHtml($_country['label']) ?>
+                                            echo $block->escapeHtml(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
+                                                       } ?>>
+                                            <?php echo $block->escapeHtml($_country['label']) ?>
                                         </option>
-                                    <?php endforeach; ?>
+                                        <?php endforeach; ?>
                                 <?php endif; ?>
                             </select>
                         </div>
@@ -301,10 +301,10 @@ $(function(){
                             <select name="product_group" id="calc-product-group">
                                 <option <?php if ($shipping) {
                                     echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $country) ? 'selected="selected"' : '');
-                                } ?> value="DOM">Domestic</option>
+                                        } ?> value="DOM">Domestic</option>
                                                                 <option <?php if ($shipping) {
-                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') != $country) ? 'selected="selected"' : '');
-                                } ?> value="EXP">International Express</option>
+                                                                    echo $block->escapeHtmlAttr(($shipping->getData('country_id') != $country) ? 'selected="selected"' : '');
+                                                                        } ?> value="EXP">International Express</option>
                             </select>
                         </div>
                     </div>

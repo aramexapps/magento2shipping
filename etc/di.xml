@@ -7,6 +7,31 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
     <preference for="Magento\Sales\Block\Adminhtml\Order\View" type="Aramex\Shipping\Block\Adminhtml\Order\View" />
+    <preference for="Aramex\Shipping\Api\AramexPaymentInterface"
+                type="Aramex\Shipping\Service\V1\AramexPayment"/>
+    <preference for="Aramex\Shipping\Api\AramexGuestPaymentInterface"
+                type="Aramex\Shipping\Service\V1\AramexGuestPayment"/>
+    <type name="Magento\CheckoutAgreements\Model\AgreementsValidator">
+        <plugin name="blockValidator" type="Aramex\Shipping\Plugin\CheckoutAgreements\Model\BlockValidator" sortOrder="1" />
+    </type>
+
+
+    <type name="Magento\Quote\Model\Quote\Address\ToOrder">
+        <plugin name="applyCodToOrder" type="Aramex\Shipping\Plugin\Quote\Address\ApplyCodToOrder"/>
+    </type>
+    <type name="Magento\Sales\Block\Order\Totals">
+        <plugin name="applyCodToTotals" type="Aramex\Shipping\Plugin\Order\ApplyCodToTotals"/>
+    </type>
+    <type name="Magento\Sales\Model\Order">
+        <plugin name="applyCodAfterLoad" type="Aramex\Shipping\Plugin\Order\ApplyCodAfterLoad"/>
+    </type>
+    <type name="Magento\Sales\Model\OrderRepository">
+        <plugin name="applyCodBeforeSave" type="Aramex\Shipping\Plugin\Order\OrderRepository\ApplyCodBeforeSave"/>
+    </type>
+    <type name="Magento\Sales\Model\ResourceModel\Order\Collection">
+        <plugin name="insertCodAfterLoad" type="Aramex\Shipping\Plugin\Order\InsertCodAfterLoad"/>
+    </type>
+
 
 
 </config>

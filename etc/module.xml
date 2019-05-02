@@ -4,6 +4,9 @@
     <module name="Aramex_Shipping" setup_version="1.0.0">
     	<sequence>
             <module name="Magento_Checkout"/>
+            <module name="Magento_Quote"/>
+            <module name="Magento_Store"/>
+            <module name="Magento_OfflinePayments"/>
         </sequence>
     </module>
 </config>
