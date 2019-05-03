@@ -413,6 +413,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'PreferredCurrencyCode' => $baseCurrencyCode
             ];
         $priceArr = [];
+        $cod = $this->_scopeConfig->getValue('payment/cashondelivery/active', self::SCOPE_STORE);
         foreach ($allowed_methods as $m_value => $m_title) {
             $params['ShipmentDetails']['ProductType'] = $m_value;
             if ($m_value == "CDA") {
@@ -420,7 +421,10 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             } else {
                 $params['ShipmentDetails']['Services'] = "";
             }
-            $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title);
+        if(!empty($cod)){
+			$params['ShipmentDetails']['Services'] = "CODS";
+        }
+            $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title, $cod);
             if (isset($requestFromAramex['response']['error'])) {
                 continue;
             }
@@ -441,7 +445,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
      * @param string $m_title Shipping method name
      * @return array Response from Aramex server
      */
-    private function makeRequestToAramex($params, $m_value, $m_title)
+    private function makeRequestToAramex($params, $m_value, $m_title, $cod)
     {
         $priceArr = [];
         $baseUrl = $this->helper->getWsdlPath();
@@ -465,12 +469,12 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $response['type'] = 'error';
             } else {
                 $response['type'] = 'success';
-                if (isset($results->RateDetails)) {
+                if (!empty($cod)) {
                     $priceArr[$m_value] = [
                         'label' => $m_title,
-                        'amount' => $results->TotalAmount->Value - $results->RateDetails->OtherAmount5,
+                        'amount' => $results->TotalAmount->Value - $results->RateDetails->OtherAmount3,
                         'currency' => $results->TotalAmount->CurrencyCode,
-                        'cod' => $results->RateDetails->OtherAmount5
+                        'cod' => $results->RateDetails->OtherAmount3
                         ];
                 } else {
                     $priceArr[$m_value] = [
