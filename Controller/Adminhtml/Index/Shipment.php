@@ -517,6 +517,7 @@ class Shipment extends \Magento\Backend\App\Action
      */
     private function makeShipment($major_par, $order, $post)
     {
+
         $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
         $soapClient = $this->soapClientFactory->create($baseUrl .

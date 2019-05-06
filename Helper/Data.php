@@ -47,6 +47,14 @@ class Data extends AbstractHelper
      */
     public function getClientInfo()
     {
+        $cod = $this->scopeConfiguration->getValue(
+            'aramex/settings/allowed_cod',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+        if(!empty($cod)){
+        	return $this->getClientInfoCOD();
+        }
+
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/account_number',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
