@@ -1417,10 +1417,9 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
     function resetShipperDetail(el) {
         var elValue = el.value;
         var flag = 0;
-
-
         if (elValue == 2) {
             
+            document.getElementById('aramex_shipment_info_payment_type').value = 'C';
             document.getElementById('aramex_shipment_shipper_name').value = aramex_shipment_receiver_name;
             document.getElementById('aramex_shipment_shipper_email').value = aramex_shipment_receiver_email;
             document.getElementById('aramex_shipment_shipper_company').value = aramex_shipment_receiver_company;
@@ -1550,26 +1549,19 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
         if ($('#aramex_shipment_info_payment_type').val() == "P") {
             document.getElementById('ASCC').style.display = 'none';
             document.getElementById('ARCC').style.display = 'none';
-
             document.getElementById('CASH').style.display = 'block';
             document.getElementById('ACCT').style.display = 'block';
             document.getElementById('PPST').style.display = 'block';
             document.getElementById('CRDT').style.display = 'block';
-
             $('#aramex_shipment_info_payment_option').val("");
-
-
         } else {
             document.getElementById('ASCC').style.display = 'block';
             document.getElementById('ARCC').style.display = 'block';
-
             document.getElementById('CASH').style.display = 'none';
             document.getElementById('ACCT').style.display = 'none';
             document.getElementById('PPST').style.display = 'none';
             document.getElementById('CRDT').style.display = 'none';
-
             $('#aramex_shipment_info_payment_option').val("");
-
         }
     });
 
@@ -1578,11 +1570,7 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
         $('#pickup_infromation').toggle('slow');
     }
 
-
-
-
     function aramexreturnpop() {
-
         $("#aramex_overlay").css("display", "block");
         $("#aramex_return_shipment_creation_submit_id").css("display", "in-block");
         $("#aramex_shipment_info_billing_account_id").val(2);
