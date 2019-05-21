@@ -410,7 +410,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'OriginAddress' => $OriginAddress,
             'DestinationAddress' => $DestinationAddress,
             'ShipmentDetails' => $ShipmentDetails,
-            'PreferredCurrencyCode' => $baseCurrencyCode
+            'PreferredCurrencyCode' => "SAR"
             ];
         $priceArr = [];
         $cod = $this->_scopeConfig->getValue('payment/cashondelivery/active', self::SCOPE_STORE);
@@ -469,12 +469,13 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $response['type'] = 'error';
             } else {
                 $response['type'] = 'success';
+                $extraFees = $this->calculateExtraFees($results);
                 if (!empty($cod)) {
                     $priceArr[$m_value] = [
                         'label' => $m_title,
-                        'amount' => $results->TotalAmount->Value - $results->RateDetails->OtherAmount3,
+                        'amount' => $results->TotalAmount->Value - $extraFees,
                         'currency' => $results->TotalAmount->CurrencyCode,
-                        'cod' => $results->RateDetails->OtherAmount3
+                        'cod' => $extraFees
                         ];
                 } else {
                     $priceArr[$m_value] = [
@@ -491,6 +492,34 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         return[ 'priceArr' => $priceArr, 'response' => $response];
     }
     
+    /**
+     * Calculate Extra Fees
+     *
+     * @param array $response Response array
+     * @return string $extraFees Extra Fees 
+     */
+    private function calculateExtraFees($results)
+    {
+    	$extraFees = [];
+    	if (!empty($results->RateDetails->OtherAmount1)) {
+		    $extraFees[] = $results->RateDetails->OtherAmount1;
+		} elseif (!empty($results->RateDetails->OtherAmount2)) {
+		    $extraFees[] = $results->RateDetails->OtherAmount2;
+		} elseif (!empty($results->RateDetails->OtherAmount3)) {
+		    $extraFees[] = $results->RateDetails->OtherAmount3;
+		} elseif (!empty($results->RateDetails->OtherAmount4)) {
+		    $extraFees[] = $results->RateDetails->OtherAmount4;
+		}elseif (!empty($results->RateDetails->OtherAmount5)) {
+		    $extraFees[] = $results->RateDetails->OtherAmount5;
+		}
+		if(!empty($extraFees)){
+			return array_sum($extraFees);
+		}else{
+			return 0;
+		}
+    }
+
+
     /**
      * Saves result to Magento
      *
