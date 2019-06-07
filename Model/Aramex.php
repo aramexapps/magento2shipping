@@ -410,7 +410,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'OriginAddress' => $OriginAddress,
             'DestinationAddress' => $DestinationAddress,
             'ShipmentDetails' => $ShipmentDetails,
-            'PreferredCurrencyCode' => "SAR"
+            'PreferredCurrencyCode' => $baseCurrencyCode
             ];
         $priceArr = [];
         $cod = $this->_scopeConfig->getValue('payment/cashondelivery/active', self::SCOPE_STORE);
@@ -454,7 +454,9 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]
         );
         try {
+
             $results = $soapClient->CalculateRate($params);
+
             if ($results->HasErrors) {
                 if (is_array($results->Notifications->Notification)) {
                     $error = "";
@@ -502,15 +504,19 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     {
     	$extraFees = [];
     	if (!empty($results->RateDetails->OtherAmount1)) {
-		    $extraFees[] = $results->RateDetails->OtherAmount1;
-		} elseif (!empty($results->RateDetails->OtherAmount2)) {
-		    $extraFees[] = $results->RateDetails->OtherAmount2;
-		} elseif (!empty($results->RateDetails->OtherAmount3)) {
-		    $extraFees[] = $results->RateDetails->OtherAmount3;
-		} elseif (!empty($results->RateDetails->OtherAmount4)) {
-		    $extraFees[] = $results->RateDetails->OtherAmount4;
-		}elseif (!empty($results->RateDetails->OtherAmount5)) {
-		    $extraFees[] = $results->RateDetails->OtherAmount5;
+		    array_push($extraFees, $results->RateDetails->OtherAmount1);
+		} 
+		if (!empty($results->RateDetails->OtherAmount2)) {
+		    array_push($extraFees, $results->RateDetails->OtherAmount2);
+		} 
+		if (!empty($results->RateDetails->OtherAmount3)) {
+		   array_push($extraFees, $results->RateDetails->OtherAmount3);
+		} 
+		if (!empty($results->RateDetails->OtherAmount4)) {
+		     array_push($extraFees, $results->RateDetails->OtherAmount4);
+		}
+		if (!empty($results->RateDetails->OtherAmount5)) {
+		     array_push($extraFees, $results->RateDetails->OtherAmount5);
 		}
 		if(!empty($extraFees)){
 			return array_sum($extraFees);

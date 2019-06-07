@@ -335,14 +335,14 @@ class Bulk extends \Magento\Backend\App\Action
                     $errors = $this->getErrorsText($auth_call);
                     return ([$errors, $method, 'error']);
                 } else {
-                    $data = [
+					$data = [
                         'items' => $post['aramex_items'],
-                        'comment_text' => "AWB No. " . $auth_call->Shipments->ProcessedShipment->ID . " - Order No. " .
-                        $auth_call->Shipments->ProcessedShipment->Reference1,
+                        'comment_text' => "Aramex Shipment Order AWB No. " . $auth_call->Shipments->ProcessedShipment->
+                        ID . " - Order No. " . $order->getId() .
+                        " <a style='color:red;'>Print Label #"  . $auth_call->Shipments->ProcessedShipment->ID ."</a>",
                         'comment_customer_notify' => true,
                         'is_visible_on_front' => true
                     ];
-                    
                     if ($order->canShip() && $post['aramex_return_shipment_creation_date'] == "create") {
                         $this->shipmentLoader->setOrderId($post['aramex_shipment_original_reference']);
                         $this->shipmentLoader->setShipmentId(null);
