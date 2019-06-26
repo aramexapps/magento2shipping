@@ -1,7 +1,7 @@
 <?php
 /**
 Description:  Aramex Shipping Magento2 plugin
-Version:      1.1.1
+Version:      1.0.0
 Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
@@ -103,9 +103,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
     private $soapClientFactory;
 
     private $objectFactory;
-
-    private $checkoutSession;
-
+    private $storeId;
      /**
       * Constructor
       *
@@ -163,7 +161,6 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         Session $sessionCustomer,
         \Magento\Framework\Webapi\Soap\ClientFactory $soapClientFactory,
         \Magento\Framework\DataObjectFactory $objectFactory,
-        \Magento\Checkout\Model\Session $checkoutSession,
         array $data = []
     ) {
         $this->_rateResultFactory = $rateResultFactory;
@@ -179,7 +176,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $this->_code = $helper->getCode();
         $this->soapClientFactory = $soapClientFactory;
         $this->objectFactory = $objectFactory;
-        $this->checkoutSession = $checkoutSession;
+        $this->storeId = $this->storeManager->getStore()->getId();
         parent::__construct(
             $scopeConfig,
             $rateErrorFactory,
@@ -259,7 +256,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         if ($request->getOrigPostcode()) {
             $r->setOrigPostal($request->getOrigPostcode());
         } else {
-            $r->setOrigPostal($this->_scopeConfig->getValue('shipping/origin/postcode', self::SCOPE_STORE) == 1);
+            $r->setOrigPostal($this->_scopeConfig->getValue('shipping/origin/postcode', self::SCOPE_STORE, $this->storeId) == 1);
         }
 
         if ($request->getDestCountryId()) {
@@ -352,9 +349,8 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $pkgQty = $r->getPackageQty();
         $product_group = 'EXP';
         $allowed_methods_key = 'allowed_international_methods';
-
         $allowed_methods = $this->internationalmethods->toKeyArray();
-        if ($this->_scopeConfig->getValue('aramex/shipperdetail/country', self::SCOPE_STORE) == $r->
+        if ($this->_scopeConfig->getValue('aramex/shipperdetail/country', self::SCOPE_STORE, $this->storeId) == $r->
             getDestCountryId()) {
             $product_group = 'DOM';
             $allowed_methods = $this->domesticmethods->toKeyArray();
@@ -363,12 +359,11 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $admin_allowed_methods = explode(',', $this->getConfigData($allowed_methods_key));
         $admin_allowed_methods = array_flip($admin_allowed_methods);
         $allowed_methods = array_intersect_key($allowed_methods, $admin_allowed_methods);
-
         $OriginAddress = [
-            'StateOrProvinceCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/state', self::SCOPE_STORE),
-            'City' => $this->_scopeConfig->getValue('aramex/shipperdetail/city', self::SCOPE_STORE),
-            'PostCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/postalcode', self::SCOPE_STORE),
-            'CountryCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/country', self::SCOPE_STORE),
+            'StateOrProvinceCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/state', self::SCOPE_STORE, $this->storeId),
+            'City' => $this->_scopeConfig->getValue('aramex/shipperdetail/city', self::SCOPE_STORE, $this->storeId),
+            'PostCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/postalcode', self::SCOPE_STORE, $this->storeId),
+            'CountryCode' => $this->_scopeConfig->getValue('aramex/shipperdetail/country', self::SCOPE_STORE, $this->storeId),
         ];
         $DestinationAddress = [
             'StateOrProvinceCode' => $r->getDestState(),
@@ -377,15 +372,15 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             getDestPostal(),
             'CountryCode' => $r->getDestCountryId(),
         ];
+        $clientInfo = $this->helper->getClientInfo();
         $ShipmentDetails = [
-            'PaymentType' => 'P',
+            'PaymentType' => $clientInfo['PaymentType'],
             'ProductGroup' => $product_group,
             'ProductType' => '',
             'ActualWeight' => ['Value' => $pkgWeight, 'Unit' => 'KG'],
             'ChargeableWeight' => ['Value' => $pkgWeight, 'Unit' => 'KG'],
             'NumberOfPieces' => $pkgQty
         ];
-        //city = NULL fixing
         $city_from_base = "";
         $customerSession = $this->sessionCustomer;
         if ($customerSession->isLoggedIn()) {
@@ -403,7 +398,6 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $DestinationAddress['City'] = $city_from_base;
             }
         }
-        $clientInfo = $this->helper->getClientInfo();
         $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrency()->getCode();
         $params = [
             'ClientInfo' => $clientInfo,
@@ -413,7 +407,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             'PreferredCurrencyCode' => $baseCurrencyCode
             ];
         $priceArr = [];
-        $cod = $this->_scopeConfig->getValue('payment/cashondelivery/active', self::SCOPE_STORE);
+		$requestFromAramex = [];
         foreach ($allowed_methods as $m_value => $m_title) {
             $params['ShipmentDetails']['ProductType'] = $m_value;
             if ($m_value == "CDA") {
@@ -421,17 +415,12 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             } else {
                 $params['ShipmentDetails']['Services'] = "";
             }
-        if(!empty($cod)){
-			$params['ShipmentDetails']['Services'] = "CODS";
-        }
-            $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title, $cod);
+            $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title);
             if (isset($requestFromAramex['response']['error'])) {
-                continue;
+				continue;
             }
             $priceArr[] = $requestFromAramex['priceArr'];
         }
-
-        $this->checkoutSession->setAramexShippingData($priceArr);
 
         $result = $this->sendResult($priceArr, $requestFromAramex);
         return $result;
@@ -445,18 +434,14 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
      * @param string $m_title Shipping method name
      * @return array Response from Aramex server
      */
-    private function makeRequestToAramex($params, $m_value, $m_title, $cod)
+    private function makeRequestToAramex($params, $m_value, $m_title)
     {
         $priceArr = [];
         $baseUrl = $this->helper->getWsdlPath();
-        $soapClient = $this->soapClientFactory->create(
-            "https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc?wsdl",
-            ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]
-        );
+        $soapClient = $this->soapClientFactory->create($baseUrl .
+                    'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         try {
-
             $results = $soapClient->CalculateRate($params);
-
             if ($results->HasErrors) {
                 if (is_array($results->Notifications->Notification)) {
                     $error = "";
@@ -471,21 +456,11 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $response['type'] = 'error';
             } else {
                 $response['type'] = 'success';
-                $extraFees = $this->calculateExtraFees($results);
-                if (!empty($cod)) {
-                    $priceArr[$m_value] = [
-                        'label' => $m_title,
-                        'amount' => $results->TotalAmount->Value - $extraFees,
-                        'currency' => $results->TotalAmount->CurrencyCode,
-                        'cod' => $extraFees
-                        ];
-                } else {
-                    $priceArr[$m_value] = [
+                $priceArr[$m_value] = [
                         'label' => $m_title,
                         'amount' => $results->TotalAmount->Value,
                         'currency' => $results->TotalAmount->CurrencyCode
                         ];
-                }
             }
         } catch (\Exception $e) {
             $response['type'] = 'error';
@@ -494,38 +469,6 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         return[ 'priceArr' => $priceArr, 'response' => $response];
     }
     
-    /**
-     * Calculate Extra Fees
-     *
-     * @param array $response Response array
-     * @return string $extraFees Extra Fees 
-     */
-    private function calculateExtraFees($results)
-    {
-    	$extraFees = [];
-    	if (!empty($results->RateDetails->OtherAmount1)) {
-		    array_push($extraFees, $results->RateDetails->OtherAmount1);
-		} 
-		if (!empty($results->RateDetails->OtherAmount2)) {
-		    array_push($extraFees, $results->RateDetails->OtherAmount2);
-		} 
-		if (!empty($results->RateDetails->OtherAmount3)) {
-		   array_push($extraFees, $results->RateDetails->OtherAmount3);
-		} 
-		if (!empty($results->RateDetails->OtherAmount4)) {
-		     array_push($extraFees, $results->RateDetails->OtherAmount4);
-		}
-		if (!empty($results->RateDetails->OtherAmount5)) {
-		     array_push($extraFees, $results->RateDetails->OtherAmount5);
-		}
-		if(!empty($extraFees)){
-			return array_sum($extraFees);
-		}else{
-			return 0;
-		}
-    }
-
-
     /**
      * Saves result to Magento
      *
@@ -636,7 +579,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $clientAramex = $this->soapClientFactory->create($url .
                     'Tracking.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
 
-        $aramexParams = $this->_getAuthDetails();
+        $aramexParams = ['ClientInfo' => $this->helper->getClientInfo()];
         $aramexParams['Transaction'] = ['Reference1' => '001'];
         $aramexParams['Shipments'] = [$trackingvalue];
         $_resAramex = $clientAramex->TrackShipments($aramexParams);
@@ -703,26 +646,5 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         }
         $resultTable .= '</tbody></table>';
         return  $resultTable;
-    }
-    
-    /**
-     * Get auth details
-     *
-     * @return array Auth details
-     */
-    private function _getAuthDetails()
-    {
-        return [
-            'ClientInfo' => [
-                'AccountCountryCode' => $this->_scopeConfig->
-            getValue('aramex/settings/account_country_code', self::SCOPE_STORE),
-                'AccountEntity' => $this->_scopeConfig->getValue('aramex/settings/account_entity', self::SCOPE_STORE),
-                'AccountNumber' => $this->_scopeConfig->getValue('aramex/settings/account_number', self::SCOPE_STORE),
-                'AccountPin' => $this->_scopeConfig->getValue('aramex/settings/account_pin', self::SCOPE_STORE),
-                'UserName' => $this->_scopeConfig->getValue('aramex/settings/user_name', self::SCOPE_STORE),
-                'Password' => $this->_scopeConfig->getValue('aramex/settings/password', self::SCOPE_STORE),
-                'Version' => 'v1.0'
-            ]
-        ];
     }
 }

@@ -1,12 +1,12 @@
-<?php
+<?php 
 /**
  * Description:  Aramex Shipping Magento2 plugin
- * Version:      1.1.1
+ * Version:      1.0.0
  * Author:       aramex.com
  * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
  * License:      GPL2
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
- */
+*/
 ?>
 <?php
 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
@@ -190,7 +190,7 @@ foreach ($itemsv as $itemvv) {
                                 <?php $time = date("H", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp());
 
                                 ?>
-                                <?php for ($i = 7; $i < 20; $i++) : ?>
+                                <?php for ($i = 7; $i < 20; $i++): ?>
                                     <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
                                     <option
                                         value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $i) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
@@ -198,7 +198,7 @@ foreach ($itemsv as $itemvv) {
                             </select>
                             <select name="pickup[ready_minute]" class="width-60 fl mar-lf-10" id="ready_minute">
                                 <?php $time = date("i", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
-                                <?php for ($i = 0; $i <= 55; $i = $i + 5) : ?>
+                                <?php for ($i = 0; $i <= 55; $i = $i + 5): ?>
                                     <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
                                     <option
                                         value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
@@ -212,7 +212,7 @@ foreach ($itemsv as $itemvv) {
                             <select name="pickup[latest_hour]" class="width-60 fl" id="latest_hour">
                                 <?php $time = date("H", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
                                 <?php $time = $time + 1; ?>
-                                <?php for ($i = 7; $i < 20; $i++) : ?>
+                                <?php for ($i = 7; $i < 20; $i++): ?>
                                     <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
                                     <option
                                         value="<?php echo $block->escapeHtmlAttr($val) ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
@@ -220,7 +220,7 @@ foreach ($itemsv as $itemvv) {
                             </select>
                             <select name="pickup[latest_minute]" class="width-60 fl mar-lf-10" id="latest_minute">
                                 <?php $time = date("i", $objectManager->create('Magento\Framework\Stdlib\DateTime\Timezone')->scopeTimeStamp()); ?>
-                                <?php for ($i = 0; $i <= 55; $i = $i + 5) : ?>
+                                <?php for ($i = 0; $i <= 55; $i = $i + 5): ?>
                                     <?php $val = ($i < 10) ? "0{$i}" : $i; ?>
                                     <option
                                         value="<?php echo $block->escapeHtmlAttr($val); ?>" <?php echo $block->escapeHtmlAttr(($time == $val) ? 'selected="selected"' : ''); ?>><?php echo $block->escapeHtml($val); ?></option>
@@ -250,11 +250,11 @@ foreach ($itemsv as $itemvv) {
                             <select name="pickup[product_group]" id="product_group">
                                 <option <?php if ($shipping) {
                                     echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $country) ? 'selected="selected"' : '');
-                                        } ?> value="DOM">Domestic
+                                } ?> value="DOM">Domestic
                                 </option>
                                 <option <?php if ($shipping) {
                                     echo $block->escapeHtmlAttr(($shipping->getData('country_id') != $country) ? 'selected="selected"' : '');
-                                        } ?> value="EXP">International Express
+                                } ?> value="EXP">International Express
                                 </option>
                             </select>
                         </div>
@@ -380,11 +380,11 @@ foreach ($itemsv as $itemvv) {
                         <div class="field fl width-270">
                             <label>Country: <span class="red">*</span></label>
                             <select name="pickup[country]" id="pickup_country">
-                                <?php if (count($_countries) > 0) : ?>
-                                    <?php foreach ($_countries as $_country) : ?>
+                                <?php if (count($_countries) > 0): ?>
+                                    <?php foreach ($_countries as $_country): ?>
                                         <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>" <?php if ($shipping) {
-                                            echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
-                                                       } ?>>
+                        echo $block->escapeHtmlAttr(($shipping->getData('country_id') == $_country['value']) ? 'selected="selected"' : '');
+                    } ?>>
                                             <?php echo $block->escapeHtml($_country['label']) ?>
                                         </option>
                                     <?php endforeach; ?>

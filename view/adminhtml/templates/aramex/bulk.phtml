@@ -1,12 +1,12 @@
-<?php
+<?php 
 /**
  * Description:  Aramex Shipping Magento2 plugin
- * Version:      1.1.1
+ * Version:      1.0.0
  * Author:       aramex.com
  * Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
  * License:      GPL2
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
- */
+*/
 ?>
 <div style="display:none; " class="popup popup-loading"></div>
 <p class="hidden_url" style="display:none;"><?php echo $block->escapeHtml($block->escapeUrl($this->getUrl('aramexshipment/index/bulk'))); ?></p>
@@ -31,7 +31,7 @@
                         $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_methods', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
                         $domestic_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Domesticmethods')->toOptionArray();
                         $international_methods = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\Internationalmethods')->toOptionArray();
-                        $allowed_international_methods_apply = [];
+                        $allowed_international_methods_apply = array();
                         ?>
                         <select class="aramex_all_options" id="aramex_shipment_info_product_type"
                                 name="aramex_shipment_info_product_type_dom">

@@ -1,7 +1,7 @@
 <?php
 /**
 Description:  Aramex Shipping Magento2 plugin
-Version:      1.1.1
+Version:      1.0.0
 Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
@@ -173,7 +173,7 @@ class Bulk extends \Magento\Backend\App\Action
                     }
                     //quontity
                     $_qty = abs($itemvv->getQtyOrdered() - $itemvv->getQtyShipped());
-                    if ($_qty == 0 && $isShipped) {
+                    if ($_qty == 0 and $isShipped) {
                         $_qty = (int)$itemvv->getQtyShipped();
                     }
 
@@ -236,7 +236,7 @@ class Bulk extends \Magento\Backend\App\Action
                 $post['aramex_shipment_receiver_name'] = ($shipping) ? $shipping->getName() : '';
                 $company_name = isset($billing) ? $billing->getData('company') : '';
                 $company_name = ($company_name) ? $company_name : '';
-                $company_name = (empty($company_name) && $shipping) ? $shipping->getName() : $company_name;
+                $company_name = (empty($company_name) and $shipping) ? $shipping->getName() : $company_name;
                 $company_name = ($shipping) ? $shipping->getData('company') : '';
 
                 $post['aramex_shipment_receiver_company'] = (!empty($company_name))? $company_name :
@@ -343,6 +343,7 @@ class Bulk extends \Magento\Backend\App\Action
                         'comment_customer_notify' => true,
                         'is_visible_on_front' => true
                     ];
+                    
                     if ($order->canShip() && $post['aramex_return_shipment_creation_date'] == "create") {
                         $this->shipmentLoader->setOrderId($post['aramex_shipment_original_reference']);
                         $this->shipmentLoader->setShipmentId(null);
@@ -513,7 +514,7 @@ class Bulk extends \Magento\Backend\App\Action
     {
         $post = [];
         foreach ($itemsv as $item) {
-            if ($item->getQtyOrdered() > $item->getQtyShipped() || $isShipped) {
+            if ($item->getQtyOrdered() > $item->getQtyShipped() or $isShipped) {
                 $_qty = abs($item->getQtyOrdered() - $item->getQtyShipped());
                 if ($_qty == 0 && $isShipped) {
                     $_qty = (int)$item->getQtyShipped();
@@ -578,7 +579,8 @@ class Bulk extends \Magento\Backend\App\Action
         } else {
             if (is_array($auth_call->Shipments->ProcessedShipment->Notifications->Notification)) {
                 $notification_string = '';
-                foreach ($auth_call->Shipments->ProcessedShipment->Notifications->Notification as $notification_error) {
+                foreach ($auth_call->Shipments->ProcessedShipment->Notifications->Notification as
+                    $notification_error) {
                     $notification_string .= $notification_error->Code . ' - ' .
                         $notification_error->Message . ' <br />';
                 }

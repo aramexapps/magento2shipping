@@ -1,7 +1,7 @@
 <?php
 /**
 Description:  Aramex Shipping Magento2 plugin
-Version:      1.1.1
+Version:      1.0.0
 Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
@@ -517,7 +517,6 @@ class Shipment extends \Magento\Backend\App\Action
      */
     private function makeShipment($major_par, $order, $post)
     {
-
         $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
         $soapClient = $this->soapClientFactory->create($baseUrl .

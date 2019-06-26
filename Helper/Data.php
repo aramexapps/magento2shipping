@@ -1,7 +1,7 @@
 <?php
 /**
 Description:  Aramex Shipping Magento2 plugin
-Version:      1.1.1
+Version:      1.0.0
 Author:       aramex.com
 Author URI:   https://www.aramex.com/solutions-services/developers-solutions-center
 License:      GPL2
@@ -16,6 +16,13 @@ use Magento\Framework\App\Helper\AbstractHelper;
  */
 class Data extends AbstractHelper
 {
+	
+    /**
+     * Object of \Magento\Store\Model\ScopeInterface
+     * @var \Magento\Store\Model\ScopeInterface
+     */
+    const SCOPE_STORE = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
+
      /**
       * Object of \Magento\Framework\Module\Dir\Reader
       * @var \Magento\Framework\Module\Dir\Reader
@@ -26,18 +33,32 @@ class Data extends AbstractHelper
       * @var \Magento\Framework\App\Config\ScopeConfigInterface
       */
     private $scopeConfiguration;
-
+    /**
+     * Object of \Magento\Store\Model\StoreManagerInterface
+     * @var \Magento\Store\Model\StoreManagerInterface
+     */
+    private $storeManager;
+    /**
+     * Store id
+     * @var string
+     */
+    private $storeId;
     /**
      * {@inheritdoc}
      * @param \Magento\Framework\Module\Dir\Reader $reader
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfiguration
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      */
+
     public function __construct(
         \Magento\Framework\Module\Dir\Reader $reader,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfiguration
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfiguration,
+        \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
+    	$this->storeManager = $storeManager;
         $this->reader = $reader;
         $this->scopeConfiguration = $scopeConfiguration;
+        $this->storeId = $this->storeManager->getStore()->getId();
     }
     
     /**
@@ -47,38 +68,46 @@ class Data extends AbstractHelper
      */
     public function getClientInfo()
     {
-        $cod = $this->scopeConfiguration->getValue(
-            'aramex/settings/allowed_cod',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
-        if(!empty($cod)){
-        	return $this->getClientInfoCOD();
-        }
 
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/account_number',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE, 
+            $this->storeId
         );
         $username = $this->scopeConfiguration->getValue(
             'aramex/settings/user_name',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE, 
+            $this->storeId
         );
         $password = $this->scopeConfiguration->getValue(
             'aramex/settings/password',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE, 
+            $this->storeId
         );
         $pin = $this->scopeConfiguration->getValue(
             'aramex/settings/account_pin',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $entity = $this->scopeConfiguration->getValue(
             'aramex/settings/account_entity',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $country_code = $this->scopeConfiguration->getValue(
             'aramex/settings/account_country_code',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
+
+        if(strtolower($country_code) !== strtolower($this->scopeConfiguration->getValue('aramex/shipperdetail/country',
+        	self::SCOPE_STORE, $this->storeId))){
+        	$paymentType = "3";
+
+        }else{
+        	$paymentType = "P";
+        }
+
         return [
             'AccountCountryCode' => $country_code,
             'AccountEntity' => $entity,
@@ -87,7 +116,8 @@ class Data extends AbstractHelper
             'UserName' => $username,
             'Password' => $password,
             'Version' => 'v1.0',
-            'Source' => 31
+            'Source' => 31,
+            'PaymentType' => $paymentType
         ];
     }
     
@@ -100,28 +130,42 @@ class Data extends AbstractHelper
     {
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_number',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $username = $this->scopeConfiguration->getValue(
             'aramex/settings/user_name',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $password = $this->scopeConfiguration->getValue(
             'aramex/settings/password',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $pin = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_pin',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $entity = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_entity',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
         $country_code = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_country_code',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
+
+        if(strtolower($country_code) !== strtolower($this->scopeConfiguration->getValue('aramex/shipperdetail/country',
+        	self::SCOPE_STORE, $this->storeId))){
+        	$paymentType = "3";
+
+        }else{
+        	$paymentType = "P";
+        }
         return [
             'AccountCountryCode' => $country_code,
             'AccountEntity' => $entity,
@@ -130,7 +174,8 @@ class Data extends AbstractHelper
             'UserName' => $username,
             'Password' => $password,
             'Version' => 'v1.0',
-            'Source' => 31
+            'Source' => 31,
+            'PaymentType' => $paymentType
         ];
     }
     
@@ -144,7 +189,8 @@ class Data extends AbstractHelper
         $wsdlBasePath = $this->reader->getModuleDir('etc', 'Aramex_Shipping') . '/wsdl/Aramex/';
         if ($this->scopeConfiguration->getValue(
             'aramex/config/sandbox_flag',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         ) == 1) {
             $path = $wsdlBasePath . 'TestMode/';
         } else {
@@ -183,8 +229,8 @@ class Data extends AbstractHelper
     {
         $data = $this->scopeConfiguration->getValue(
             $configPath,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-            $storeId
+            self::SCOPE_STORE,
+            $this->storeId
         );
         if (!empty($data)) {
             return explode(',', $data);
@@ -201,7 +247,8 @@ class Data extends AbstractHelper
     {
         return $this->scopeConfiguration->getValue(
             $config_path,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
     }
     /**
@@ -214,7 +261,8 @@ class Data extends AbstractHelper
     {
         return $this->scopeConfiguration->getValue(
             $config_path,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            self::SCOPE_STORE,
+            $this->storeId
         );
     }
     /**
@@ -226,4 +274,5 @@ class Data extends AbstractHelper
     {
         return 'aramex';
     }
+
 }

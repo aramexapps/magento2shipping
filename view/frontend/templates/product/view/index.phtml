@@ -16,8 +16,8 @@ if ($this->isActive() == '1') {
                 <div class="aramex_field">
                     <label>Country</label>
                     <select name="destination_country" class="arm_country" id="destination_country">
-                        <?php if (count($this->getCountries()) > 0) : ?>
-                            <?php foreach ($this->getCountries() as $_country) : ?>
+                        <?php if (count($this->getCountries()) > 0): ?>
+                            <?php foreach ($this->getCountries() as $_country): ?>
                                 <option value="<?php echo $block->escapeHtmlAttr($_country['value']) ?>" <?php
                                 if ($this->getDestinationAddress()) {
                                     $address = $this->getDestinationAddress();
@@ -78,9 +78,9 @@ if ($this->isActive() == '1') {
             
         $(document).ready(function () {
 
-            $(".aramexcalculator_send").click(function() {
-                sendAramexRequest('<?php echo $block->escapeHtml($this->getId()); ?>');
-            });
+			$(".aramexcalculator_send").click(function() {
+			    sendAramexRequest('<?php echo $block->escapeHtml($this->getId()); ?>');
+			});
 
             $(function () {
                 //----- OPEN
@@ -115,7 +115,7 @@ if ($this->isActive() == '1') {
             $.ajax({
                 url: system_base_url + "aramexcalculator/index/calculator",
                 data: {
-                    form_key:$.cookie('form_key'),
+					form_key:$.cookie('form_key'),
                     city: chk_city,
                     post_code: chk_postcode,
                     country_code: country_code,

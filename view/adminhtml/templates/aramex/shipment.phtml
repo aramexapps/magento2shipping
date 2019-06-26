@@ -1240,7 +1240,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                 ?>
                                                 <td class="aramex_item_name">
                                                         <span
-                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(substr($item->getName(), 0, 21)); ?>
+                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(mb_substr($item->getName(), 0, 21)); ?>
                                                             ...</span>
                                                     <input type="hidden"
                                                            id="aramex_items_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
@@ -1442,6 +1442,7 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
             document.getElementById('aramex_shipment_receiver_mobile').value = aramex_shipment_shipper_mobile;
             flag = 1;
         } else if (elValue == 3) {
+        	/*
             document.getElementById('aramex_shipment_shipper_name').value = "";
             document.getElementById('aramex_shipment_shipper_email').value = "";
             document.getElementById('aramex_shipment_shipper_company').value = "";
@@ -1452,7 +1453,7 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
             document.getElementById('aramex_shipment_shipper_state').value = "";
             document.getElementById('aramex_shipment_shipper_phone').value = "";
             document.getElementById('aramex_shipment_shipper_mobile').value = "";
-            document.getElementById('aramex_shipment_info_payment_type').value = '3';
+
 
             document.getElementById('ASCC').style.display = 'block';
             document.getElementById('ARCC').style.display = 'block';
@@ -1463,9 +1464,11 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
             document.getElementById('CRDT').style.display = 'none';
 
             $('#aramex_shipment_info_payment_option').val("");
-
-
+			*/	
+            document.getElementById('aramex_shipment_info_payment_type').value = '3';
             flag = 2;
+
+
         } else {
             if (flag = 1) {
                 document.getElementById('aramex_shipment_receiver_name').value = aramex_shipment_receiver_name;
