@@ -356,6 +356,11 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             $allowed_methods = $this->domesticmethods->toKeyArray();
             $allowed_methods_key = 'allowed_domestic_methods';
         }
+        if ($this->_scopeConfig->getValue('aramex/config/default_payment_method', self::SCOPE_STORE, $this->storeId) === '3') {
+            $product_group = 'EXP';
+            $allowed_methods = $this->internationalmethods->toKeyArray();
+            $allowed_methods_key = 'allowed_international_methods';
+        }
         $admin_allowed_methods = explode(',', $this->getConfigData($allowed_methods_key));
         $admin_allowed_methods = array_flip($admin_allowed_methods);
         $allowed_methods = array_intersect_key($allowed_methods, $admin_allowed_methods);

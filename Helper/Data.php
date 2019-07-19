@@ -100,13 +100,11 @@ class Data extends AbstractHelper
             $this->storeId
         );
 
-        if(strtolower($country_code) !== strtolower($this->scopeConfiguration->getValue('aramex/shipperdetail/country',
-        	self::SCOPE_STORE, $this->storeId))){
-        	$paymentType = "3";
-
-        }else{
-        	$paymentType = "P";
-        }
+        $paymentType = $this->scopeConfiguration->getValue(
+        	'aramex/config/default_payment_method',
+        	self::SCOPE_STORE,
+        	$this->storeId
+        );
 
         return [
             'AccountCountryCode' => $country_code,

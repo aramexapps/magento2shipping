@@ -46,7 +46,8 @@
                     <label>Show Method if Not Applicable</label>
                     <frontend_class>shipping-skip-hide</frontend_class>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>              
+                </field>
+          
                 <field id="sort_order" translate="label" type="text" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sort Order</label>
                 </field>
@@ -143,6 +144,10 @@
                     <source_model>Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices</source_model>
                     <can_be_empty>1</can_be_empty>
                 </field>
+                <field id="default_payment_method" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Payment Method</label>
+                    <source_model>Aramex\Shipping\Model\Carrier\Aramex\Source\Defaultpaymenttype</source_model>
+                </field>  
             </group>
             <group id="shipperdetail" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Shipper Details</label>
