@@ -161,7 +161,7 @@ class Shipment extends \Magento\Backend\App\Action
             $descriptionOfGoods .= $itemname->getId() . ' - ' . trim($itemname->getName());
         }
         $descriptionOfGoods = substr($descriptionOfGoods, 0, 65);
-        $major_par = $this->getParams($post, $descriptionOfGoods);
+        $major_par = $this->getParams($post, $descriptionOfGoods, $order);
         $aramex_errors = $this->makeShipment($major_par, $order, $post);
         if (isset($aramex_errors['aramex_errors'])) {
             $strip = strstr($post['aramex_shipment_referer'], "aramexpopup", true);
@@ -200,11 +200,12 @@ class Shipment extends \Magento\Backend\App\Action
      * @param string $descriptionOfGoods Description of goods
      * @return array
      */
-    private function getParams($post, $descriptionOfGoods)
+    private function getParams($post, $descriptionOfGoods, $order)
     {
+    	$storeId = $order->getStore()->getId();
         $totalItems = (trim($post['number_pieces']) == '') ? 1 : (int) $post['number_pieces'];
-            //attachment
-            $totalWeight = $post['order_weight'];
+        //attachment
+        $totalWeight = $post['order_weight'];
         $params = [];
             //shipper parameters
             $params['Shipper'] = [
@@ -242,7 +243,8 @@ class Shipment extends \Magento\Backend\App\Action
             $params['Consignee'] = [
                 'Reference1' => $post['aramex_shipment_receiver_reference'],
                 'Reference2' => '',
-                'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 2) ?
+                'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 2 ||
+                	$post['aramex_shipment_info_billing_account'] == 3) ?
                 $post['aramex_shipment_shipper_account'] : '',
                 //Party Address
                 'PartyAddress' => [
@@ -278,41 +280,49 @@ class Shipment extends \Magento\Backend\App\Action
                     'PartyAddress' => [
                         'Line1' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/address',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'Line2' => '',
                         'Line3' => '',
                         'City' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/city',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'StateOrProvinceCode' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/state',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'PostCode' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/postalcode',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'CountryCode' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/country',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                     ],
                     'Contact' => [
                         'Department' => '',
                         'PersonName' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/name',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'Title' => '',
                         'CompanyName' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/company',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'PhoneNumber1' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/phone',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'PhoneNumber1Ext' => '',
                         'PhoneNumber2' => '',
@@ -320,11 +330,13 @@ class Shipment extends \Magento\Backend\App\Action
                         'FaxNumber' => '',
                         'CellPhone' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/mobile',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'EmailAddress' => $this->scopeConfig->getValue(
                             'aramex/shipperdetail/email',
-                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+                            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                            $storeId
                         ),
                         'Type' => ''
                     ],
