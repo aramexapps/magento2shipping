@@ -286,7 +286,9 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         $r->setValue($request->getPackageValue());
         $r->setValueWithDiscount($request->getPackageValueWithDiscount());
         $r->setDestCity($request->getDestCity());
+
         $this->_rawRequest = $r;
+
     }
     
     /**
@@ -324,6 +326,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             $size = $this->getConfigData('size');
         }
         $r->setSize($size);
+
         return $r;
     }
     
@@ -388,6 +391,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
         ];
         $city_from_base = "";
         $customerSession = $this->sessionCustomer;
+/*
         if ($customerSession->isLoggedIn()) {
             $customerObj = $this->customer->load($customerSession->getCustomer()->getId());
             $customerAddress = [];
@@ -403,6 +407,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                 $DestinationAddress['City'] = $city_from_base;
             }
         }
+*/
         $baseCurrencyCode = $this->storeManager->getStore()->getBaseCurrency()->getCode();
         $params = [
             'ClientInfo' => $clientInfo,
@@ -420,6 +425,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
             } else {
                 $params['ShipmentDetails']['Services'] = "";
             }
+
             $requestFromAramex = $this->makeRequestToAramex($params, $m_value, $m_title);
             if (isset($requestFromAramex['response']['error'])) {
 				continue;
@@ -447,6 +453,7 @@ class Aramex extends AbstractCarrierOnline implements CarrierInterface
                     'aramex-rates-calculator-wsdl.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         try {
             $results = $soapClient->CalculateRate($params);
+
             if ($results->HasErrors) {
                 if (is_array($results->Notifications->Notification)) {
                     $error = "";

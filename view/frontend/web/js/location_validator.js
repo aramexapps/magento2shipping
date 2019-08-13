@@ -1,5 +1,5 @@
-require(['jquery'], function ($) {
-
+require(['jquery', 'jquery/ui'], function ($) {
+ jQuery(document).ready( function() {
     /* billing_aramex_cities and  shipping_aramex_cities */
     var billingAramexCitiesObj;
     var shippingAramexCitiesObj;
@@ -8,16 +8,17 @@ require(['jquery'], function ($) {
 var shipping_aramex_cities;
 var billing_aramex_cities;
     var body_index = false;
-    if ($("body").hasClass("checkout-index-index")) {
+    if (jQuery("body").hasClass("checkout-index-index") || jQuery("body").hasClass("customer-address-form")) {
         var body_index = true;
     }
 
     /* check checkout page*/
-    if (window.location.href.indexOf("/checkout/") > -1 && body_index == true) {
+    if ((window.location.href.indexOf("/checkout/") > -1 || window.location.href.indexOf("/customer/address/") > -1) && body_index == true) {
+
         /* wait for checkout form*/
         var i = setInterval(function () {
 
-            if (jQuery('#shipping').find("input[name^='city']").length ) {
+            if (jQuery('#shipping').find("input[name^='city']").length || jQuery('.customer-address-form').find("input[name^='city']").length ) {
                 //runValidation();
             /* stop waiting */
                 clearInterval(i);
@@ -30,23 +31,53 @@ var billing_aramex_cities;
                         getButtonNext();
                     }
                 }, 100);
+
                 if (active == 1) {
+
                     /* set HTML blocks */
                     jQuery('#shipping').find("input[name^='city']").after('<div id="aramex_loader" style="height:31px; width:31px; display:none;"></div>');
                     jQuery('.checkout-index-index').append('<div  class="aramex-modal"  style="display:none;"><div class="popup-inner">Loading Address Validation...</div></div>');
                     jQuery('#billing').find("input[name^='city']").after('<div id="aramex_loader"></div>');
 
+
+
+
                     shipping_aramex_cities_temp = shipping_aramex_cities;
 
                     /* get Aramex sities */
-                    shippingAramexCitiesObj = AutoSearchControls('shipping', shipping_aramex_cities);
+                    
+if(jQuery("body").hasClass("customer-address-form")){
 
-                    jQuery('#shipping').find("select[name^='country_id']").change(function () {
+jQuery('.customer-address-form').append('<div  class="aramex-modal"  style="display:none;"><div class="popup-inner">Loading Address Validation...</div></div>');
+jQuery('#form-validate').find("input[name^='city']").after('<div id="aramex_loader"></div>');
+
+shippingAramexCitiesObj = AutoSearchControls('form-validate ', shipping_aramex_cities);
+                	jQuery('#form-validate ').find("select[name^='country_id']").change(function () {
+                        getAllCitiesJson('form-validate ', shippingAramexCitiesObj);
+                    });
+                    getAllCitiesJson('form-validate ', shippingAramexCitiesObj);
+                    jQuery('#form-validate').find("input[name^='city']").blur(function () {
+                        addressApiValidation('form-validate')
+                    });
+                    jQuery('#form-validate').find("select[name^='region_id']").blur(function () {
+                        addressApiValidation('form-validate')
+                    });
+                    /* POSTCODE validate */
+                    jQuery('#form-validate').find("input[name^='postcode']").blur(function () {
+                        addressApiValidation('form-validate')
+                    });
+
+
+}else{
+	shippingAramexCitiesObj = AutoSearchControls('shipping', shipping_aramex_cities);
+
+                	jQuery('#shipping').find("select[name^='country_id']").change(function () {
                         getAllCitiesJson('shipping', shippingAramexCitiesObj);
                     });
                     getAllCitiesJson('shipping', shippingAramexCitiesObj);
 
-                    if (jQuery('#shipping').find(".action-show-popup").length == 0) {
+                if (jQuery('#shipping').find(".action-show-popup").length == 0) {
+
                     jQuery('#shipping').find("input[name^='city']").blur(function () {
                         addressApiValidation('shipping')
                     });
@@ -58,6 +89,7 @@ var billing_aramex_cities;
                     jQuery('#shipping').find("input[name^='postcode']").blur(function () {
                         addressApiValidation('shipping')
                     });
+
                 } else {
                     jQuery('#opc-new-shipping-address').find("input[name^='city']").blur(function () {
                         addressApiValidation('opc-new-shipping-address')
@@ -71,6 +103,9 @@ var billing_aramex_cities;
                         addressApiValidation('opc-new-shipping-address')
                     });
                 }
+
+}
+
                 }
             }
 
@@ -171,24 +206,29 @@ var billing_aramex_cities;
 
     function AutoSearchControls(type, search_city)
     {
-        console.log(jQuery('#' + type + '').find("input[name^='city']").attr("id"));
+    	var search_city;
         return jQuery('#' + type + '').find("input[name^='city']")
                 .autocomplete({
                     /*source: search_city,*/
                     minLength: 3,
                     scroll: true,
                     source: function (req, responseFn) {
+
                         var re = jQuery.ui.autocomplete.escapeRegex(req.term);
                         var matcher = new RegExp("^" + re, "i");
                         var a = jQuery.grep(search_city, function (item, index) {
+
                             return matcher.test(item);
                         });
+                        alert("2");
                         responseFn(a);
                     },
                     search: function (event, ui) {
-                        /* open initializer */
+                    	console.log("type", type);
+                         /* open initializer */
                         jQuery('.checkout-index-index .ui-autocomplete').css('display', 'none');
                         jQuery('#' + type + ' #aramex_loader').css('display', 'block');
+                        jQuery('#opc-new-' + type + '-address' + ' #aramex_loader').css('display', 'block');
                         forceDisableNext(type);
                     },
                     messages: {
@@ -213,6 +253,7 @@ var billing_aramex_cities;
                         }
                         forcetoEanbleNext(type);
                         jQuery('#' + type + ' #aramex_loader').css('display', 'none');
+                        jQuery('#opc-new-' + type + '-address' + ' #aramex_loader').css('display', 'none');
                         return temp_arr;
                     }
                 }).focus(function () {
@@ -260,9 +301,14 @@ var billing_aramex_cities;
 
     function getAllCitiesJson(type, aramexCitiesObj)
     {
+
         var system_base_url = getSystemBaseUrl();
 
         var country_code = jQuery('#' + type + '').find("select[name^='country_id']").val();
+
+if (jQuery(jQuery('#opc-new-' + type + '-address').find("select[name^='country_id']")).hasClass("select")) {
+  var country_code = jQuery('#opc-new-' + type + '-address').find("select[name^='country_id']").val();
+}
         var mycities = '';
         var url_check = system_base_url + "apilocationvalidator/index/searchautocities?country_code=" + country_code;
 
@@ -298,3 +344,4 @@ var billing_aramex_cities;
     }
 });
 
+});

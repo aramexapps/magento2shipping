@@ -3,7 +3,7 @@ div#aramex_loader {
     height:31px; width:31px;
     display:none;
 }
-.checkout-index-index .ui-autocomplete{
+.checkout-index-index .ui-autocomplete, .customer-address-form .ui-autocomplete{
     background: white;
     border:1px solid #ccc;
     width:250px;
@@ -13,7 +13,7 @@ div#aramex_loader {
     z-index:999;
 
 }
-.checkout-index-index .ui-autocomplete li a{
+.checkout-index-index .ui-autocomplete li a, .customer-address-form .ui-autocomplete li a{
     color:black;
     cursor:pointer;
 }
