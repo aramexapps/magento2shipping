@@ -324,8 +324,8 @@ class Bulk extends \Magento\Backend\App\Action
         $errors = [];
         try {
             /* here's your form processing */
-            $order = $this->order->
-                loadByIncrementId($post['aramex_shipment_original_reference']);
+			$order_id= $this->getRequest()->getParam('order_id');
+            $order = $this->order->load($order_id);
             $major_par = $this->getParameters($order, $post);
 
             try {
@@ -345,7 +345,7 @@ class Bulk extends \Magento\Backend\App\Action
                     ];
                     
                     if ($order->canShip() && $post['aramex_return_shipment_creation_date'] == "create") {
-                        $this->shipmentLoader->setOrderId($post['aramex_shipment_original_reference']);
+                        $this->shipmentLoader->setOrderId($order->getId());
                         $this->shipmentLoader->setShipmentId(null);
                         $this->shipmentLoader->setShipment($data);
                         $this->shipmentLoader->setTracking(null);
