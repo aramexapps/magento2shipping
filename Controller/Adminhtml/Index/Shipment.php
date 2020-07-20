@@ -202,17 +202,22 @@ class Shipment extends \Magento\Backend\App\Action
      */
     private function getParams($post, $descriptionOfGoods, $order)
     {
-    	$storeId = $order->getStore()->getId();
+        $storeId = $order->getStore()->getId();
         $totalItems = (trim($post['number_pieces']) == '') ? 1 : (int) $post['number_pieces'];
         //attachment
         $totalWeight = $post['order_weight'];
         $params = [];
+        if ($post['aramex_shipment_shipper_account_show'] == 1) {
+        $AccountNumber = $this->helper->getClientInfo();
+        } else {
+            $AccountNumber = $this->helper->getClientInfoCOD();
+        }
             //shipper parameters
             $params['Shipper'] = [
                 'Reference1' => $post['aramex_shipment_shipper_reference'],
                 'Reference2' => '',
                 'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 1) ?
-                $post['aramex_shipment_shipper_account'] : $post['aramex_shipment_shipper_account'],
+                $AccountNumber["AccountNumber"] : $AccountNumber["AccountNumber"],
                 //Party Address
                 'PartyAddress' => [
                     'Line1' => $post['aramex_shipment_shipper_street'],
@@ -244,7 +249,7 @@ class Shipment extends \Magento\Backend\App\Action
                 'Reference1' => $post['aramex_shipment_receiver_reference'],
                 'Reference2' => '',
                 'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 2 ||
-                	$post['aramex_shipment_info_billing_account'] == 3) ?
+                    $post['aramex_shipment_info_billing_account'] == 3) ?
                 $post['aramex_shipment_shipper_account'] : '',
                 //Party Address
                 'PartyAddress' => [
