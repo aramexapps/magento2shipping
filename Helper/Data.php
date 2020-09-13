@@ -82,7 +82,7 @@ class Data extends AbstractHelper
         
         $_order = $this->orderRepository->get($this->request->getParam('order_id'));
         
-        if (isset($_order))
+        if (isset($_order)) 
         {
             $storeId = (int) $_order->getStoreId();
         }
