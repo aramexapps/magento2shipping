@@ -9,6 +9,7 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  */
 namespace Aramex\Shipping\Helper;
 
+
 use Magento\Framework\App\Helper\AbstractHelper;
 
 /**
@@ -16,7 +17,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
  */
 class Data extends AbstractHelper
 {
-	
+    
     /**
      * Object of \Magento\Store\Model\ScopeInterface
      * @var \Magento\Store\Model\ScopeInterface
@@ -28,6 +29,11 @@ class Data extends AbstractHelper
       * @var \Magento\Framework\Module\Dir\Reader
       */
     private $reader;
+    /**
+     *  Post request
+     * @var string
+     */
+    private $request;
      /**
       * Object of \Magento\Framework\App\Config\ScopeConfigInterface
       * @var \Magento\Framework\App\Config\ScopeConfigInterface
@@ -51,14 +57,18 @@ class Data extends AbstractHelper
      */
 
     public function __construct(
+        \Magento\Backend\App\Action\Context $context,
         \Magento\Framework\Module\Dir\Reader $reader,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfiguration,
-        \Magento\Store\Model\StoreManagerInterface $storeManager
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
     ) {
-    	$this->storeManager = $storeManager;
+        $this->request = $context->getRequest();
+        $this->storeManager = $storeManager;
         $this->reader = $reader;
         $this->scopeConfiguration = $scopeConfiguration;
         $this->storeId = $this->storeManager->getStore()->getId();
+        $this->orderRepository = $orderRepository;
     }
     
     /**
@@ -66,46 +76,56 @@ class Data extends AbstractHelper
      *
      * @return array Information about client
      */
-    public function getClientInfo()
-    {
 
+    public function getClientInfo()
+    {   
+        
+        $_order = $this->orderRepository->get($this->request->getParam('order_id'));
+        
+        if (isset($_order))
+        {
+            $storeId = (int) $_order->getStoreId();
+        }
+        else
+        {
+             $storeId = $this->storeId;
+        }
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/account_number',
             self::SCOPE_STORE, 
-            $this->storeId
+            $storeId
         );
         $username = $this->scopeConfiguration->getValue(
             'aramex/settings/user_name',
             self::SCOPE_STORE, 
-            $this->storeId
+            $storeId
         );
         $password = $this->scopeConfiguration->getValue(
             'aramex/settings/password',
             self::SCOPE_STORE, 
-            $this->storeId
+            $storeId
         );
         $pin = $this->scopeConfiguration->getValue(
             'aramex/settings/account_pin',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $entity = $this->scopeConfiguration->getValue(
             'aramex/settings/account_entity',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $country_code = $this->scopeConfiguration->getValue(
             'aramex/settings/account_country_code',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
 
         $paymentType = $this->scopeConfiguration->getValue(
-        	'aramex/config/default_payment_method',
-        	self::SCOPE_STORE,
-        	$this->storeId
+            'aramex/config/default_payment_method',
+            self::SCOPE_STORE,
+            $storeId
         );
-
         return [
             'AccountCountryCode' => $country_code,
             'AccountEntity' => $entity,
@@ -126,43 +146,53 @@ class Data extends AbstractHelper
      */
     public function getClientInfoCOD()
     {
+        $_order = $this->orderRepository->get($this->request->getParam('order_id'));
+
+        if (isset($_order))
+        {
+            $storeId = (int) $_order->getStoreId();
+        }
+        else
+        {
+             $storeId = $this->storeId;
+        }
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_number',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $username = $this->scopeConfiguration->getValue(
             'aramex/settings/user_name',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $password = $this->scopeConfiguration->getValue(
             'aramex/settings/password',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $pin = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_pin',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $entity = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_entity',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
         $country_code = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_country_code',
             self::SCOPE_STORE,
-            $this->storeId
+            $storeId
         );
 
         if(strtolower($country_code) !== strtolower($this->scopeConfiguration->getValue('aramex/shipperdetail/country',
-        	self::SCOPE_STORE, $this->storeId))){
-        	$paymentType = "3";
+            self::SCOPE_STORE, $storeId))){
+            $paymentType = "3";
 
         }else{
-        	$paymentType = "P";
+            $paymentType = "P";
         }
         return [
             'AccountCountryCode' => $country_code,
