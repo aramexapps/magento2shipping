@@ -14,13 +14,14 @@ $scopeConfig = $objectManager->create('\Magento\Framework\App\Config\ScopeConfig
 $_order = $objectManager->create('Magento\Sales\Model\Order')->load($this->order_id);
 ?>
 <?php
+$storeId = $_order->getStoreId();
 $shipping = $_order->getShippingAddress();
-$country = $scopeConfig->getValue('aramex/shipperdetail/country', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-$city = $scopeConfig->getValue('aramex/shipperdetail/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-$postalcode = $scopeConfig->getValue('aramex/shipperdetail/postalcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-$state = $scopeConfig->getValue('aramex/shipperdetail/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-$phone = $scopeConfig->getValue('aramex/shipperdetail/phone', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-$flag = $scopeConfig->getValue('aramex/config/sandbox_flag', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+$country = $scopeConfig->getValue('aramex/shipperdetail/country', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+$city = $scopeConfig->getValue('aramex/shipperdetail/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+$postalcode = $scopeConfig->getValue('aramex/shipperdetail/postalcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+$state = $scopeConfig->getValue('aramex/shipperdetail/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+$phone = $scopeConfig->getValue('aramex/shipperdetail/phone', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+$flag = $scopeConfig->getValue('aramex/config/sandbox_flag', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
 ?>
 
 <?php
