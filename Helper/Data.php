@@ -80,9 +80,14 @@ class Data extends AbstractHelper
     public function getClientInfo()
     {   
         
-        $_order = $this->orderRepository->get($this->request->getParam('order_id'));
+        $orderId = $this->request->getParam('order_id');     
         
-        if (isset($_order)) 
+        if($orderId != null)
+        {
+            $_order = $this->orderRepository->get($orderId);
+        }
+        
+        if ($orderId && isset($_order)) 
         {
             $storeId = (int) $_order->getStoreId();
         }
@@ -90,6 +95,7 @@ class Data extends AbstractHelper
         {
              $storeId = $this->storeId;
         }
+
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/account_number',
             self::SCOPE_STORE, 
@@ -146,9 +152,14 @@ class Data extends AbstractHelper
      */
     public function getClientInfoCOD()
     {
-        $_order = $this->orderRepository->get($this->request->getParam('order_id'));
-
-        if (isset($_order))
+        $orderId = $this->request->getParam('order_id');     
+        
+        if($orderId != null)
+        {
+            $_order = $this->orderRepository->get($orderId);
+        }
+        
+        if ($orderId && isset($_order)) 
         {
             $storeId = (int) $_order->getStoreId();
         }
@@ -156,6 +167,7 @@ class Data extends AbstractHelper
         {
              $storeId = $this->storeId;
         }
+        
         $account = $this->scopeConfiguration->getValue(
             'aramex/settings/cod_account_number',
             self::SCOPE_STORE,
