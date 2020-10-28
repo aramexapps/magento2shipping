@@ -93,7 +93,10 @@ foreach ($itemsv as $itemvv) {
         }
         <?php
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance(); ?>
-        optionalZipCountries = <?php echo $objectManager->get('Magento\Directory\Helper\Data')->getCountriesWithOptionalZip(true); ?>;
+        optionalZipCountries = <?php 
+        $optionalZipCountirez = $objectManager->get('Magento\Directory\Helper\Data')->getCountriesWithOptionalZip(true);
+        echo $optionalZipCountirez;
+        ?>;
         var pickup_country_map = zipValidateMaker('pickup_country', 'pickup_zip', 'pickup_city', optionalZipCountries, 'required-entry');
         <?php
         $storeManager = $objectManager->get('\Magento\Store\Model\StoreManagerInterface');
@@ -105,6 +108,7 @@ foreach ($itemsv as $itemvv) {
             var country_param_origin = $(".pickup-form #pickup_country").val();
             $(".schedule-pickup-part #pickup_country").change(function () {
                 country_param_origin = this.value;
+                pickup_country_map.checkoptions();
             });
 
             $('#pickup_city').autocomplete({
@@ -141,6 +145,10 @@ foreach ($itemsv as $itemvv) {
                     }
                 }
             }).autocomplete("widget").addClass("ui-autocomplete_aramex");
+
+            $('#aramex_schedule_pickup').click(function () {
+                pickup_country_map.checkoptions();
+            })
         });
 
     });
@@ -505,7 +513,7 @@ foreach ($itemsv as $itemvv) {
                             }
                             return false;
                         }
-                    });
+                    });                   
                 });
             });
         </script>

@@ -164,6 +164,8 @@ class Shipment extends \Magento\Backend\App\Action
         $major_par = $this->getParams($post, $descriptionOfGoods, $order);
         $aramex_errors = $this->makeShipment($major_par, $order, $post);
         if (isset($aramex_errors['aramex_errors'])) {
+            $this->_session->setData("aramex_errors", true);
+
             $strip = strstr($post['aramex_shipment_referer'], "aramexpopup", true);
             $url = $strip;
             if (empty($strip)) {
@@ -172,6 +174,7 @@ class Shipment extends \Magento\Backend\App\Action
             $resultRedirect->setUrl($url . 'aramexpopup/show');
             return $resultRedirect;
         } else {
+            $this->_session->setData("aramex_errors", false);
             $resultRedirect->setUrl($post['aramex_shipment_referer']);
             return $resultRedirect;
         }

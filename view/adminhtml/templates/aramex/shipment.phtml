@@ -140,7 +140,6 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                 var l=ww-w
                 l=l/2;
                 $(param1).css({'visibility':'visible','left':l+'px','display':'none','height':h,'top':t+'px'}).fadeIn(500);
-
             },
             openCalc:function(){
                 this.cropValues();
@@ -474,7 +473,6 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
 
 
             $(".aramex_countries").change(function(){
-
                 var country_id =$(this).attr('id');
                 var country_param = "&country_code="+$(this).val();
 
@@ -503,7 +501,10 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                 $("#aramex_shipment_info_additional_services_div").html($("select[name=aramex_shipment_info_additional_services] option:selected").text());
             });
 
-
+            $('#create_aramex_shipment').click(function () {
+                aramex_shipment_shipper_country_map.checkoptions();
+                aramex_shipment_receiver_country_map.checkoptions();
+            })
         });
     });
 </script>
@@ -609,11 +610,11 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <select class="aramex_countries validate-select" id="aramex_shipment_shipper_country"
                                 name="aramex_shipment_shipper_country">
                             <?php
-                            foreach ($countryCollection as $country) {
+                            foreach ($countryCollection as $countryItem) {
                                 ?>
-                                <option value="<?php echo $block->escapeHtmlAttr($country['value']) ?>" <?php if ($_country) {
-                                    echo ($_country == $country['value']) ? 'selected="selected"' : '';
-                                               } ?> ><?php echo $block->escapeHtml($country['label']) ?></option>
+                                <option value="<?php echo $block->escapeHtmlAttr($countryItem['value']) ?>" <?php if ($_country) {
+                                    echo ($_country == $countryItem['value']) ? 'selected="selected"' : '';
+                                               } ?> ><?php echo $block->escapeHtml($countryItem['label']) ?></option>
                                 <?php
                             }
                             ?>
@@ -705,10 +706,10 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                         <select class="aramex_countries" id="aramex_shipment_receiver_country"
                                 name="aramex_shipment_receiver_country">
                             <?php
-                            foreach ($countryCollection as $country) {
+                            foreach ($countryCollection as $countryItem) {
                                 ?>
                                 <option
-                                    value="<?php echo $block->escapeHtmlAttr($country['value']) ?>" <?php echo ($_country == $country['value']) ? 'selected="selected"' : ''; ?> ><?php echo $block->escapeHtml($country['label']) ?></option>
+                                    value="<?php echo $block->escapeHtmlAttr($countryItem['value']) ?>" <?php echo ($_country == $countryItem['value']) ? 'selected="selected"' : ''; ?> ><?php echo $block->escapeHtml($countryItem['label']) ?></option>
                                 <?php
                             }
                             ?>
@@ -1350,8 +1351,6 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
 
     require([ 'jquery', 'jquery/ui', 'chained'], function($){
 
-
-
     var allowed_domestic_methods = <?php echo json_encode($allowed_domestic_methods); ?>;
     var allowed_international_methods = <?php echo json_encode($allowed_international_methods); ?>;
 
@@ -1381,12 +1380,16 @@ $allowed_international_methods = explode(',', $scopeConfig->getValue('aramex/con
     var aramex_shipment_receiver_phone = document.getElementById('aramex_shipment_receiver_phone').value;
     var aramex_shipment_receiver_mobile = document.getElementById('aramex_shipment_receiver_mobile').value;
 
-
-
     $("#aramex_shipment_info_billing_account_id").change(function () {
+        var hasError = <?php        
+        $hasError = $formSession->getData("aramex_errors");
+        echo $hasError == "" || $hasError == false ? "false" : "true" ?>;
         
-                    resetShipperDetail(this);
-                });
+        if(!hasError)
+        {
+            resetShipperDetail(this);
+        }
+    });
 
 <?php
 if (!$_order->canShip() && $aramex_return_button) { ?>
@@ -1398,6 +1401,7 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
 <?php        }
 ?>
     function resetShipperDetail(el) {
+        debugger;
         var elValue = el.value;
         var flag = 0;
         if (elValue == 2) {
@@ -1735,6 +1739,8 @@ e.preventDefault();
     });
 
 </script>
-<?php $formSession->unsetData('form_data') ?>
+<?php $formSession->unsetData('form_data');
+$formSession->unsetData('aramex_errors');
+ ?>
 
 
