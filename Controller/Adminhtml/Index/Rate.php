@@ -82,13 +82,17 @@ class Rate extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
+        $order_id = $this->request->getParam("order_id");
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $_order = $objectManager->get('Magento\Sales\Model\Order\Item')->load($order_id);
+        $storeId = $_order->getStore()->getId();
         $account = $this->scopeConfig->getValue(
             'aramex/settings/account_number',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId
         );
         $country_code = $this->scopeConfig->getValue(
             'aramex/settings/account_country_code',
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId
         );
         $post = $this->getRequest()->getPost();
         $response = [];
