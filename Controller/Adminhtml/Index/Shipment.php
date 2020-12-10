@@ -160,7 +160,7 @@ class Shipment extends \Magento\Backend\App\Action
         foreach ($order->getAllVisibleItems() as $itemname) {
             $descriptionOfGoods .= $itemname->getId() . ' - ' . trim($itemname->getName());
         }
-        $descriptionOfGoods = substr($descriptionOfGoods, 0, 65);
+        $descriptionOfGoods = mb_substr($descriptionOfGoods, 0, 65, "UTF-8");
         $major_par = $this->getParams($post, $descriptionOfGoods, $order);
         $aramex_errors = $this->makeShipment($major_par, $order, $post);
         if (isset($aramex_errors['aramex_errors'])) {

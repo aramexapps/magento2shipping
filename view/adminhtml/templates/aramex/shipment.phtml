@@ -1224,7 +1224,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                 ?>
                                                 <td class="aramex_item_name">
                                                         <span
-                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(mb_substr($item->getName(), 0, 21)); ?>
+                                                            title="<?php echo $block->escapeHtmlAttr($item->getName()); ?>"><?php echo $block->escapeHtmlAttr(mb_substr($item->getName(), 0, 21, "UTF-8")); ?>
                                                             ...</span>
                                                     <input type="hidden"
                                                            id="aramex_items_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
