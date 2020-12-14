@@ -84,7 +84,7 @@ class Rate extends \Magento\Framework\App\Action\Action
     {
         $order_id = $this->request->getParam("order_id");
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-        $_order = $objectManager->get('Magento\Sales\Model\Order\Item')->load($order_id);
+        $_order = $objectManager->get('Magento\Sales\Model\Order')->load($order_id);
         $storeId = $_order->getStore()->getId();
         $account = $this->scopeConfig->getValue(
             'aramex/settings/account_number',
