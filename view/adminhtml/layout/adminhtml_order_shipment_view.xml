@@ -1,8 +1,7 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="footer">
-            <block class="Magento\Framework\View\Element\Template" name="aramex.print_label"   template="Aramex_Shipping::aramex/print_label.phtml" />
+            <block class="Magento\Framework\View\Element\Template" name="aramex.print_label" template="Aramex_Shipping::print_label.phtml" />
         </referenceContainer>
     </body>
 </page>
-

@@ -1,22 +1,17 @@
 <?xml version="1.0"?>
-<page
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   layout="admin-1column"
-   xsi:noNamespaceSchemaLocation="../../../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd" >
-   <head>
-       <css src="Aramex_Shipping::css/aramex.css"/>
-       <css src="Aramex_Shipping::css/aramex_validation.css"/>
-   </head>
-   <body>
-         <referenceBlock name="sales_order_view">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Aramex_Shipping::css/aramex.css" />
+        <css src="Aramex_Shipping::css/aramex_validation.css" />
+    </head>
+    <body>
+        <referenceBlock name="sales_order_view">
             <action method="setTemplate">
-                <argument name="template" translate="true" xsi:type="string">aramex/preloader.phtml</argument>
+                <argument name="template" translate="true" xsi:type="string">preloader.phtml</argument>
             </action>
         </referenceBlock>
         <referenceBlock name="head.additional">
-            <block class="Aramex\Shipping\Block\Index" name="atwix_testblock" template="apilocationvalidator/js.phtml" />
-       </referenceBlock>
-   </body>
+            <block class="Aramex\Shipping\Block\Catalog\Product\View\Index" name="aramex_js" template="Aramex_Shipping::js.phtml" />
+        </referenceBlock>
+    </body>
 </page>
-
-

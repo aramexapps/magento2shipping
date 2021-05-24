@@ -7,7 +7,7 @@ Author URI:   https://www.aramex.com/solutions-services/developers-solutions-cen
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  */
-namespace Aramex\Shipping\Catalog\Block\Product\View;
+namespace Aramex\Shipping\Block\Catalog\Product\View;
 
 use Magento\Catalog\Block\Product\AbstractProduct;
 use \Magento\Customer\Model\Session;
