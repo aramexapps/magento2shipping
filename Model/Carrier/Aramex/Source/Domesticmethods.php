@@ -40,6 +40,8 @@ class Domesticmethods
         $arr[] = ['value'=>'SFC', 'label'=>'Surface  Cargo (India)'];
         $arr[] = ['value'=>'SMD', 'label'=>'Same Day (Document)'];
         $arr[] = ['value'=>'SMP', 'label'=>'Same Day (Parcel)'];
+        $arr[] = ['value'=>'SDD', 'label'=>'Same Day Delivery'];
+        $arr[] = ['value'=>'HVY', 'label'=>'Heavy (20kgs and more)'];
         $arr[] = ['value'=>'SPD', 'label'=>'Special: Legal Branches Mail Service'];
         $arr[] = ['value'=>'SPL', 'label'=>'Special : Legal Notifications Delivery'];
         

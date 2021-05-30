@@ -920,7 +920,7 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                             $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
                             ?>
 
-
+                             
                             <?php
                             if (count($allowed_domestic_additional_services) > 0) {
                                 $i = 1;
@@ -928,8 +928,11 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                     if (in_array($val['value'], $allowed_domestic_additional_services)) {
                                         ?> 
                                         <option 
-
-                                        <?php echo (($isCode === $val['value'] ) ) ? 'selected="selected"' : ''; ?>
+                                        <?php
+                                        if ($methodTitle == 'custompayment' && $val['value'] =='CODS')
+                                        { continue; }
+                                        ?>
+                                        <?php if ($key == "CODS") { continue; }echo (($isCode === $val['value'] ) ) ? 'selected="selected"' : ''; ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="dom_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             class="DOM local"><?php echo $block->escapeHtml($val['label']); ?>
@@ -946,7 +949,12 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                 foreach ($international_additional_services as $key => $val) {
                                     if (in_array($val['value'], $allowed_international_additional_services)) {
                                         ?>
-                                        <option <?php echo ($isCode === $val['value'] ) ? 'selected="selected"' : ''; ?>
+                                        <option 
+                                        <?php
+                                        if ($methodTitle == 'custompayment' && $val['value'] =='CODS')
+                                        { continue; }
+                                        ?>
+                                        <?php echo ($isCode === $val['value']) ? 'selected="selected"' : ''; ?>
                                             value="<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             id="exp_as_<?php echo $block->escapeHtmlAttr($val['value']); ?>"
                                             class="non-local EXP"><?php echo $block->escapeHtml($val['label']); ?></option>
@@ -1031,21 +1039,40 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                       value="<?php echo $block->escapeHtmlAttr((($cod == true)? $_code : "")); ?>"/>
                     </div>
                     <div class="text_short">
-                       
+                        <?php $custom_amount = $custom_amount2 = ($_order->getPayment()->getMethodInstance()->getCode() != 'ccsave') ? round($_order->getData('grand_total')- $_shippedPrice, 2) : ''; ?>
                         <label>Custom Amount</label><input class="" type="text"
                                                            id="aramex_shipment_info_custom_amount"
                                                            name="aramex_shipment_info_custom_amount"
-                                                           value="<?php echo $block->escapeHtmlAttr(($dom  == false)? $_amount: ""); ?>"/>
+                                                           value="<?php echo $block->escapeHtmlAttr(($dom  == false)? $custom_amount: ""); ?>"/>
                     </div>
 
-
+                    <input class="" type="hidden" id="aramex_shipment_info_custom_amount_hidden"
+                                                  name="aramex_shipment_info_custom_amount_hidden"
+                                                  value="<?php echo $block->escapeHtmlAttr($custom_amount2); ?>"/>
+                   
                     <div class="text_short">
-                        <?php $_code = ($session) ? $formData['aramex_shipment_currency_code_custom'] : $_order->getData('base_currency_code'); ?>
+                        <?php $custom_currency = ($session) ? $formData['aramex_shipment_currency_code_custom'] : $_order->getData('base_currency_code'); ?>
                         <label>Custom Currency</label><input type="text" class="" id="aramex_shipment_currency_code_custom"
                                                       name="aramex_shipment_currency_code_custom"
-                                                      value="<?php echo $block->escapeHtmlAttr((($dom  == false)? $_code: "")); ?>"/>
+                                                      value="<?php echo $block->escapeHtmlAttr((($dom  == false)? $custom_currency: "")); ?>"/>
                     </div>  
-                    
+                    <?php $custom_currency2 = ($session) ? $formData['aramex_shipment_currency_code_custom_hidden'] : $_order->getData('base_currency_code'); ?>
+                    <input class="" type="hidden" id="aramex_shipment_currency_code_custom_hidden"
+                                                  name="aramex_shipment_currency_code_custom_hidden"
+                                                  value="<?php echo $block->escapeHtmlAttr($custom_currency2); ?>"/>
+                    <!-- Insurance -->
+                    <div class="text_short">
+                        <?php $_insurance = ($session) ? $formData['aramex_shipment_insurance_amount'] : ''; ?>
+                        <label>Insurance Amount</label><input type="text" class=""
+                                                                 id="aramex_shipment_insurance_amount"
+                                                                 name="aramex_shipment_insurance_amount"
+                                                                 value="<?php echo $block->escapeHtmlAttr($_insurance); ?>"/>
+                    </div>
+                    <!-- Insurance -->
+                    <input class="" type="hidden" id="aramex_shipment_info_payment_method"
+                                                  name="aramex_shipment_info_payment_method"
+                                                  value="<?php echo $block->escapeHtmlAttr($methodTitle); ?>"/>
+
                     <div class="text_short">
                         <?php $_comment = ($session) ? $formData['aramex_shipment_info_comment'] : ''; ?>
                         <label>Comment</label><textarea rows="4"
@@ -1208,8 +1235,10 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                         <th class="aramex_item_qty">Qty</th>
                                     </tr>
                                     <?php
+                                    $itemDetails = [];
                                     foreach ($itemsv as $item) {
                                         if ($item->getQtyOrdered() > $item->getQtyShipped()) {
+                                            array_push($itemDetails,$item->getId());
                                             ?>
                                             <tr id="item<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                 class="aramex_item_tobe_shipped">
@@ -1235,7 +1264,10 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                     <input class="aramex_input_items_qty" type="text"
                                                            name="p_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                            value="<?php echo $block->escapeHtmlAttr($_qty); ?>"/>
-
+                                                    <input type="hidden"
+                                                           id="aramex_items_Title_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
+                                                           name="aramex_items_Title_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
+                                                           value="<?php echo $block->escapeHtmlAttr($item->getName()) ?>"/>       
                                                     <input type="hidden"
                                                            id="aramex_items_base_price_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                            name="aramex_items_base_price_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
@@ -1248,13 +1280,17 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                            id="aramex_items_total_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                            name="aramex_items_total_<?php echo $block->escapeHtmlAttr($item->getId()); ?>"
                                                            value="<?php echo $block->escapeHtmlAttr($_qty); ?>"/>
-
                                                 </td>
                                             </tr>
                                             <?php
                                         }
                                     }
                                     ?>
+                                    <?php $itemNumbers = implode(",",$itemDetails); ?>
+                                    <input class="" type="hidden" id="item_details"
+                                                           name="item_details"
+                                                           value="<?php echo $block->escapeHtmlAttr($itemNumbers); ?>"/>
+                                    
                                     <tr>
                                         <td colspan="2"
                                             style="font-weight: bold;background: none repeat scroll 0% 0% rgb(224, 224, 224);">

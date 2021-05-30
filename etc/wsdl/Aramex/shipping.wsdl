@@ -162,6 +162,8 @@
           <xsd:element type="tns:Weight" name="Weight" nillable="true"/>
           <xsd:element type="xsd:string" name="Comments" nillable="true" minOccurs="0"/>
           <xsd:element type="xsd:string" name="Reference" nillable="true" minOccurs="0"/>
+          <xsd:element type="xsd:string" name="GoodsDescription" nillable="true" minOccurs="0"/>
+          <xsd:element type="tns:Money" name="CustomsValue" nillable="true" minOccurs="0"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element type="tns:ShipmentItem" name="ShipmentItem" nillable="true"/>

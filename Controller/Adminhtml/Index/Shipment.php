@@ -372,6 +372,29 @@ class Shipment extends \Magento\Backend\App\Action
             $services = implode(',', $services);
             ///// add COD and
             // Other Main Shipment Parameters
+            $itemNumbers = explode(',',$post['item_details']);
+            $itemDetails = array();
+            
+            foreach ($itemNumbers as $val)
+            {
+                $itemTitle = "aramex_items_Title_".$val;
+                $itemQuantity = "aramex_items_total_".$val;
+                $itemPrice = "aramex_items_base_price_".$val;
+                $itemWeight = "aramex_items_base_weight_".$val;
+                array_push($itemDetails,[
+                    'Quantity' => $post[$itemQuantity],
+                    'Weight' => [
+                        'Value' => $post[$itemWeight],
+                        'Unit' => $post['weight_unit']
+                    ],
+                    'GoodsDescription' => $post[$itemTitle],
+                    'CustomsValue' => [
+                        'Value' => $post[$itemPrice],
+                        'CurrencyCode' => $post['aramex_shipment_currency_code_custom_hidden']
+                    ]
+                ]);
+            }
+
             $params['Reference1'] = $post['aramex_shipment_info_reference'];
             $params['Reference2'] = '';
             $params['Reference3'] = '';
@@ -404,9 +427,11 @@ class Shipment extends \Magento\Backend\App\Action
                 'DescriptionOfGoods' => (trim($post['aramex_shipment_description']) == '') ? $descriptionOfGoods :
                 $post['aramex_shipment_description'],
                 'GoodsOriginCountry' => $post['aramex_shipment_shipper_country'],
-                'Items' => $totalItems,
+                'Items' => [
+                    'ShipmentItem' => $itemDetails
+                ]
             ];
-            
+
             if ($post['aramex_shipment_info_cod_amount'] == "") {
                 $post['aramex_shipment_info_cod_amount'] = 0;
             }
@@ -417,20 +442,38 @@ class Shipment extends \Magento\Backend\App\Action
                 'Value' => $post['aramex_shipment_info_cod_amount'],
                 'CurrencyCode' => $post['aramex_shipment_currency_code']
             ];
-
-            $params['Details']['CustomsValueAmount'] = [
-                'Value' => $post['aramex_shipment_info_custom_amount'],
-                'CurrencyCode' => $post['aramex_shipment_currency_code_custom']
+            if ($post['aramex_shipment_info_product_group'] === 'DOM') {
+                $params['Details']['CustomsValueAmount'] = [
+                    'Value' => $post['aramex_shipment_info_custom_amount_hidden'],
+                    'CurrencyCode' => $post['aramex_shipment_currency_code_custom_hidden']
+                ];
+            }
+            else {
+                $params['Details']['CustomsValueAmount'] = [
+                    'Value' => $post['aramex_shipment_info_custom_amount'],
+                    'CurrencyCode' => $post['aramex_shipment_currency_code_custom']
+                ];
+            }
+            // Insurance
+            $params['Details']['InsuranceAmount'] = [
+                'Value' => $post['aramex_shipment_insurance_amount'],
+                'CurrencyCode' => $post['aramex_shipment_currency_code_custom_hidden']
             ];
-
+            $params['ShipmentDetails']['InsuranceAmount'] =  $post['aramex_shipment_insurance_amount'];
+            // Insurance
             $major_par['Shipments'][] = $params;
-
+            
             if ($post['aramex_shipment_shipper_account_show'] == 1) {
                 $clientInfo = $this->helper->getClientInfo();
             } else {
                 $clientInfo = $this->helper->getClientInfoCOD();
             }
-
+            // Source
+            if($post['aramex_shipment_info_payment_method'] == 'custompayment')
+            {
+                $clientInfo['Source'] = 47;
+            } 
+            // Source
             $major_par['ClientInfo'] = $clientInfo;
             $report_id = (int) $this->scopeConfig->getValue(
                 'aramex/config/report_id',
