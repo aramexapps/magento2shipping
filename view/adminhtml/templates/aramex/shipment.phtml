@@ -1073,6 +1073,44 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                                                   name="aramex_shipment_info_payment_method"
                                                   value="<?php echo $block->escapeHtmlAttr($methodTitle); ?>"/>
 
+                    <div id="indianFields" class="text_short" style="display: none;">	
+                            <div class="text_short">	
+                                <label>Shipper Tax Number</label>	
+                                <input type="text" class="" id="ShipperTaxIdVATEINNumber" name="ShipperTaxIdVATEINNumber"/>	
+                            </div>	
+                            <div class="text_short">	
+                                <label>Consignee Tax Number</label>	
+                                <input type="text" class="" id="ConsigneeTaxIdVATEINNumber" name="ConsigneeTaxIdVATEINNumber"/>	
+                            </div>	
+                            <div class="text_short">	
+                                <label>Tax Paid</label>	
+                                <select class="" id="TaxPaid" name="TaxPaid">	
+                                    <option value="1">Yes</option>	
+                                    <option value="0">No</option>	
+                                </select>	
+                            </div>	
+                            <div id="taxAmountBlock" class="text_short">	
+                                <label>Tax Amount</label>	
+                                <input type="text" class="" id="TaxAmount" name="TaxAmount"/>	
+                            </div>	
+                            <div class="text_short">	
+                                <label>Invoice Number</label>	
+                                <input type="text" class="" id="InvoiceNumber" name="InvoiceNumber"/>	
+                            </div>	
+                            <div class="text_short">	
+                                <label>Invoice Date</label>	
+                                <input type="date" class="" id="InvoiceDate" name="InvoiceDate"/>	
+                            </div>	
+                            <div class="text_short">	
+                                <label>Exporter Type</label>	
+                                <select class="" id="ExporterType" name="ExporterType">	
+                                    <option value="UT">UT</option>	
+                                    <option value="Bond">Bond</option>	
+                                    <option value="Not Applicable">Not Applicable</option>	
+                                </select>	
+                        </div>	
+                    </div>
+
                     <div class="text_short">
                         <?php $_comment = ($session) ? $formData['aramex_shipment_info_comment'] : ''; ?>
                         <label>Comment</label><textarea rows="4"
@@ -1726,7 +1764,29 @@ if (!$_order->canShip() && $aramex_return_button) { ?>
     $("#aramex_shipment_info_product_group_div").html($("select[name=aramex_shipment_info_product_group] option:selected").text());
     $("#aramex_shipment_info_service_type_div").html($("select[name=aramex_shipment_info_service_type] option:selected").text());
     $("#aramex_shipment_info_additional_services_div").html($("select[name=aramex_shipment_info_additional_services] option:selected").text());
+
+    $("#TaxPaid").change(function () {	
+        if ($("#TaxPaid").val() == 1)	
+            $("#taxAmountBlock").fadeIn(500);	
+        else	
+            $("#taxAmountBlock").fadeOut(500);	
+            document.getElementById('TaxAmount').value = "";	
+    });
+    $("#aramex_shipment_shipper_country").change(function () {	
+        if ($("#aramex_shipment_shipper_country").val() == "IN" && $("#aramex_shipment_receiver_country").val() != "IN")	
+            $("#indianFields").fadeIn(500);	
+        else	
+            $("#indianFields").fadeOut(500);	
+        });
     $(document).ready(function () {
+        var currentDate = new Date();
+        var currentYear = currentDate.getFullYear();
+        var currentMonth = currentDate.getMonth() + 1;
+        var currentDay = currentDate.getDate();
+        $("#InvoiceDate").prop('max', currentYear + "-" + currentMonth + "-" + currentDay);
+
+        if ($("#aramex_shipment_shipper_country").val() == "IN" && $("#aramex_shipment_receiver_country").val() != "IN")
+            { $("#indianFields").fadeIn(500); }
 
         $('.note-list-comment a').click(function () {
 e.preventDefault();

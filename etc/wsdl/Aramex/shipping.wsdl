@@ -123,6 +123,7 @@
           <xsd:element type="tns:Money" name="CollectAmount" nillable="true" minOccurs="0"/>
           <xsd:element type="xsd:string" name="Services" nillable="true" minOccurs="0"/>
           <xsd:element type="tns:ArrayOfShipmentItem" name="Items" nillable="true" minOccurs="0"/>
+		  <xsd:element type="tns:ArrayOfAdditionalProperty" name="AdditionalProperties" nillable="true" minOccurs="0"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element type="tns:ShipmentDetails" name="ShipmentDetails" nillable="true"/>
@@ -167,6 +168,20 @@
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element type="tns:ShipmentItem" name="ShipmentItem" nillable="true"/>
+      <xsd:complexType name="ArrayOfAdditionalProperty">
+			<xsd:sequence>
+				<xsd:element type="tns:AdditionalProperty" name="AdditionalProperty" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+		<xsd:element type="tns:ArrayOfAdditionalProperty" name="ArrayOfAdditionalProperty" nillable="true"/>
+		<xsd:complexType name="AdditionalProperty">
+			<xsd:sequence>
+				<xsd:element type="xsd:string" name="CategoryName" nillable="true"/>
+				<xsd:element type="xsd:string" name="Name" nillable="true"/>
+				<xsd:element type="xsd:string" name="Value" nillable="true"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	  <xsd:element type="tns:AdditionalProperty" name="AdditionalProperty" nillable="true"/>
       <xsd:complexType name="ArrayOfAttachment">
         <xsd:sequence>
           <xsd:element type="tns:Attachment" name="Attachment" nillable="true" minOccurs="0" maxOccurs="unbounded"/>

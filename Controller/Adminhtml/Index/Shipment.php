@@ -351,6 +351,68 @@ class Shipment extends \Magento\Backend\App\Action
                 ];
             }
 
+            $AdditionalPropertyDetails = array();
+        if (isset($post['aramex_shipment_shipper_country']) && $post['aramex_shipment_shipper_country'] == 'IN') {
+            if ($post['ShipperTaxIdVATEINNumber'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "ShipperTaxIdVATEINNumber",
+                    'Value' => $post['ShipperTaxIdVATEINNumber']
+                ]);
+            }
+            if ($post['ConsigneeTaxIdVATEINNumber'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "ConsigneeTaxIdVATEINNumber",
+                    'Value' => $post['ConsigneeTaxIdVATEINNumber']
+                ]);
+            }
+            if ($post['TaxPaid'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "TaxPaid",
+                    'Value' => $post['TaxPaid']
+                ]);
+            }
+            if ($post['InvoiceDate'] != null)
+            {
+                $orgDate = $post['InvoiceDate'];  
+                $newDate = date("m/d/Y", strtotime($orgDate));  
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "InvoiceDate",
+                    'Value' => $newDate
+                ]);
+            }
+            if ($post['InvoiceNumber'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "InvoiceNumber",
+                    'Value' => $post['InvoiceNumber']
+                ]);
+            }
+            if ($post['TaxAmount'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "TaxAmount",
+                    'Value' => $post['TaxAmount']
+                ]);
+            }
+            if ($post['ExporterType'] != null)
+            {
+                array_push($AdditionalPropertyDetails,[
+                    'CategoryName' => "CustomsClearance",
+                    'Name' => "ExporterType",
+                    'Value' => $post['ExporterType']
+                ]);
+            }
+        }
+
             ////// add COD
             $services = [];
             if ($post['aramex_shipment_info_product_type'] == "CDA") {
@@ -429,6 +491,9 @@ class Shipment extends \Magento\Backend\App\Action
                 'GoodsOriginCountry' => $post['aramex_shipment_shipper_country'],
                 'Items' => [
                     'ShipmentItem' => $itemDetails
+                ],
+                'AdditionalProperties' => [
+                    'AdditionalProperty' => $AdditionalPropertyDetails
                 ]
             ];
 
