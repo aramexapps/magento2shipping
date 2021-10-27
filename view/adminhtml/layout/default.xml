@@ -14,7 +14,7 @@
             </action>
         </referenceBlock>
         <referenceBlock name="head.additional">
-            <block class="Aramex\Shipping\Block\Index" name="atwix_testblock" template="apilocationvalidator/js.phtml" />
+			<block class="Aramex\Shipping\Catalog\Block\Product\View\Index" name="atwix_testblock" template="Aramex_Shipping::apilocationvalidator/js.phtml" />
        </referenceBlock>
    </body>
 </page>
