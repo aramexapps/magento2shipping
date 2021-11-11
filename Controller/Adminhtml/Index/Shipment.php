@@ -439,22 +439,24 @@ class Shipment extends \Magento\Backend\App\Action
             
             foreach ($itemNumbers as $val)
             {
-                $itemTitle = "aramex_items_Title_".$val;
-                $itemQuantity = "aramex_items_total_".$val;
-                $itemPrice = "aramex_items_base_price_".$val;
-                $itemWeight = "aramex_items_base_weight_".$val;
-                array_push($itemDetails,[
-                    'Quantity' => $post[$itemQuantity],
-                    'Weight' => [
-                        'Value' => $post[$itemWeight],
-                        'Unit' => $post['weight_unit']
-                    ],
-                    'GoodsDescription' => $post[$itemTitle],
-                    'CustomsValue' => [
-                        'Value' => $post[$itemPrice],
-                        'CurrencyCode' => $post['aramex_shipment_currency_code_custom_hidden']
-                    ]
-                ]);
+                if (!empty($val) || trim($val) !== '') {
+                    $itemTitle = "aramex_items_Title_".$val;
+                    $itemQuantity = "aramex_items_total_".$val;
+                    $itemPrice = "aramex_items_base_price_".$val;
+                    $itemWeight = "aramex_items_base_weight_".$val;
+                    array_push($itemDetails,[
+                        'Quantity' => $post[$itemQuantity],
+                        'Weight' => [
+                            'Value' => $post[$itemWeight],
+                            'Unit' => $post['weight_unit']
+                        ],
+                        'GoodsDescription' => $post[$itemTitle],
+                        'CustomsValue' => [
+                            'Value' => $post[$itemPrice],
+                            'CurrencyCode' => $post['aramex_shipment_currency_code_custom_hidden']
+                        ]
+                    ]);
+                }
             }
 
             $params['Reference1'] = $post['aramex_shipment_info_reference'];
