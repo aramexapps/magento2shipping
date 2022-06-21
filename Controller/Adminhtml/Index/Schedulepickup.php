@@ -170,43 +170,115 @@ class Schedulepickup extends \Magento\Backend\App\Action
                             $error.='Aramex: ' . $notify_error->Code . ' - ' . $notify_error->Message . "<br>";
                         }
                         $response['error'] = $error;
+                        $response['type'] = 'error';
                     } else {
-                        $response['error'] = 'Aramex: ' . $results->Notifications->Notification->Code . ' - ' .
+                        if (str_contains($results->Notifications->Notification->Message, 'Duplicate collection already exists')) { 
+                            
+                            preg_match('#\((.*?)\)#', $results->Notifications->Notification->Message, $match);
+
+                            $pickup_no = $match[1];
+                            $history_pickup = false;
+                            foreach ($_order->getStatusHistoryCollection() as $status) {
+                                if ($status->getComment()) {
+                                    if (str_contains($status->getComment(), $pickup_no)) {
+                                        $history_pickup = true;
+                                    }
+                                }
+                            }
+            
+                            if($history_pickup==0){
+                                $notify = false;
+                                $comment = "Pickup reference number ( <strong>" . $pickup_no . "</strong> ).";
+                                
+                                if($_order->getStatus()){
+                                    $history = $_order->addStatusHistoryComment($comment, $_order->getStatus())
+                                        ->setIsCustomerNotified($notify);
+                                    $history->save();
+                                }
+
+                                if($_order->getId()){
+                                    $shipmentId = null;
+                                    $shipment = $this->shipment->getCollection()
+                                                    ->addFieldToFilter("order_id", $_order->getId())->load();
+
+                                    if ($shipment->getSize() > 0) {
+                                        foreach ($shipment as $_shipment) {
+                                            $shipmentId = $_shipment->getId();
+                                            break;
+                                        }
+                                    }
+                                    if ($shipmentId != null) {
+                                        $data = [['comment_text' => $comment]];
+                                        $this->shipmentLoader->setOrderId($post['order_id']);
+                                        $this->shipmentLoader->setShipmentId(null);
+                                        $this->shipmentLoader->setShipment($data);
+                                        $this->shipmentLoader->setTracking(null);
+                                        $shipment = $this->shipmentLoader->load();
+                                        if (!empty($data['comment_text'])) {
+                                            $shipment->addComment(
+                                                $data['comment_text'],
+                                                isset($data['comment_customer_notify']),
+                                                isset($data['is_visible_on_front'])
+                                            );
+
+                                            $shipment->setCustomerNote($data['comment_text']);
+                                            $shipment->setCustomerNoteNotify(isset($data['comment_customer_notify']));
+                                        }
+                                    }
+                                }
+                            }
+
+                            $response['type'] = 'success';
+                            $amount = "<p class='amount'>Pickup reference number ( <strong>" . $pickup_no .
+                                "</strong> ).</p>";
+                            $response['html'] = $amount;
+
+                        }else{
+
+                            $response['error'] = 'Aramex: ' . $results->Notifications->Notification->Code . ' - ' .
                             $results->Notifications->Notification->Message;
+                            $response['type'] = 'error';
+
+                        }
                     }
-                    $response['type'] = 'error';
                 } else {
                     $notify = false;
                     $comment = "Pickup reference number ( <strong>" . $results->ProcessedPickup->ID . "</strong> ).";
-                    $history = $_order->addStatusHistoryComment($comment, $_order->getStatus())
-                            ->setIsCustomerNotified($notify);
-                    $history->save();
-                    $shipmentId = null;
-                    $shipment = $this->shipment->getCollection()
-                                    ->addFieldToFilter("order_id", $_order->getId())->load();
-
-                    if ($shipment->getSize() > 0) {
-                        foreach ($shipment as $_shipment) {
-                            $shipmentId = $_shipment->getId();
-                            break;
-                        }
+                    
+                    if($_order->getStatus()){
+                        $history = $_order->addStatusHistoryComment($comment, $_order->getStatus())
+                                ->setIsCustomerNotified($notify);
+                        $history->save();
                     }
-                    if ($shipmentId != null) {
-                        $data = [['comment_text' => $comment]];
-                        $this->shipmentLoader->setOrderId($post['order_id']);
-                        $this->shipmentLoader->setShipmentId(null);
-                        $this->shipmentLoader->setShipment($data);
-                        $this->shipmentLoader->setTracking(null);
-                        $shipment = $this->shipmentLoader->load();
-                        if (!empty($data['comment_text'])) {
-                            $shipment->addComment(
-                                $data['comment_text'],
-                                isset($data['comment_customer_notify']),
-                                isset($data['is_visible_on_front'])
-                            );
 
-                            $shipment->setCustomerNote($data['comment_text']);
-                            $shipment->setCustomerNoteNotify(isset($data['comment_customer_notify']));
+                    if($_order->getId()){
+                        $shipmentId = null;
+                        $shipment = $this->shipment->getCollection()
+                                        ->addFieldToFilter("order_id", $_order->getId())->load();
+
+                        if ($shipment->getSize() > 0) {
+                            foreach ($shipment as $_shipment) {
+                                $shipmentId = $_shipment->getId();
+                                break;
+                            }
+                        }
+                        if ($shipmentId != null) {
+                            $data = [['comment_text' => $comment]];
+                            $this->shipmentLoader->setOrderId($post['order_id']);
+                            $this->shipmentLoader->setShipmentId(null);
+                            $this->shipmentLoader->setShipment($data);
+                            $this->shipmentLoader->setTracking(null);
+                            $shipment = $this->shipmentLoader->load();
+                            if (!empty($data['comment_text'])) {
+                                $shipment->addComment(
+                                    $data['comment_text'],
+                                    isset($data['comment_customer_notify']),
+                                    isset($data['is_visible_on_front'])
+                                );
+
+                                $shipment->setCustomerNote($data['comment_text']);
+                                $shipment->setCustomerNoteNotify(isset($data['comment_customer_notify']));
+                            }
                         }
                     }
                     $response['type'] = 'success';
