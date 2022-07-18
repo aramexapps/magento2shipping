@@ -444,8 +444,8 @@ class Bulk extends \Magento\Backend\App\Action
                 $awbno = strstr($_history, "- Order No", true);
             }
         }
-
-        if ($order->getStatus() == "pending" && !isset($awbno)) {
+ /*if ($order->getStatus() == "pending" && !isset($awbno)) {*/
+        if ($order->getStatus() && !isset($awbno)) {
             $shipping = $order->getShippingAddress();
             $shippingCountry = ($shipping) ? $shipping->getData('country_id') : '';
             if ($shippingCountry == $post['aramex_shipment_shipper_country']) {
