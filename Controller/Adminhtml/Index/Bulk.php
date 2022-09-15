@@ -349,6 +349,11 @@ class Bulk extends \Magento\Backend\App\Action
                         $this->shipmentLoader->setShipmentId(null);
                         $this->shipmentLoader->setShipment($data);
                         $this->shipmentLoader->setTracking(null);
+                        $trackData = [
+                            'entity_id' => null,
+                            'id' => null
+                        ];
+                        $this->tracking->setData($trackData);
                         $shipment = $this->shipmentLoader->load();
 
                         if ($shipment) {
