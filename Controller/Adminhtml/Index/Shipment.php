@@ -434,7 +434,7 @@ class Shipment extends \Magento\Backend\App\Action
             $services = implode(',', $services);
             ///// add COD and
             // Other Main Shipment Parameters
-            $itemNumbers = explode(',',$post['item_details']);
+            $itemNumbers = explode(',',$post['item_details'] ?? '');
             $itemDetails = array();
             
             foreach ($itemNumbers as $val)

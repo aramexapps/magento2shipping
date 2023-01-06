@@ -914,13 +914,12 @@ $allowed_cod = $scopeConfig->getValue('aramex/settings/allowed_cod', \Magento\St
                             <option value=""></option>
 
                             <?php
-                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId));
-                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId));
+                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId) ?? '');
+                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId) ?? '');
                             $domestic_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\DomesticAdditionalServices')->toOptionArray();
                             $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
                             ?>
 
-                             
                             <?php
                             if (count($allowed_domestic_additional_services) > 0) {
                                 $i = 1;

@@ -55,8 +55,8 @@
                                 name="aramex_shipment_info_service_type_dom">
                             <option value=""></option>
                             <?php
-                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
-                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) ?? '');
+                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) ?? '');
                             $domestic_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\DomesticAdditionalServices')->toOptionArray();
                             $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
                             ?>
@@ -130,8 +130,8 @@
                                 name="aramex_shipment_info_service_type">
                             <option value=""></option>
                             <?php
-                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
-                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
+                            $allowed_domestic_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_domestic_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) ?? '');
+                            $allowed_international_additional_services = explode(',', $scopeConfig->getValue('aramex/config/allowed_international_additional_services', \Magento\Store\Model\ScopeInterface::SCOPE_STORE) ?? '');
                             $domestic_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\DomesticAdditionalServices')->toOptionArray();
                             $international_additional_services = $objectManager->create('Aramex\Shipping\Model\Carrier\Aramex\Source\InternationalAdditionalServices')->toOptionArray();
                             ?>

@@ -114,6 +114,11 @@
                     <label>Enabled</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+
+                <field id="messageDefault" type="label" showInDefault="1" showInWebsite="0" showInStore="0">
+                  <label><![CDATA[<strong>Aramex Shipping Extension Version</strong>]]></label>
+                  <frontend_model>Aramex\Shipping\Block\System\Config\Form\Field\Message</frontend_model>
+              </field>
             </group>
             <group id="config" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Service Configuration</label>

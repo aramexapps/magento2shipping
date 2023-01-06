@@ -3,6 +3,7 @@
     <argument name="data" xsi:type="array">
         <item name="buttons" xsi:type="array">
             <item name="baulk_aramex_shipment" xsi:type="array">
+                <item name="url" xsi:type="string">'#'</item>
                 <item name="name" xsi:type="string">baulk_aramex_shipment</item>
                 <item name="label" xsi:type="string" translate="true">Bulk Aramex shipment</item>
                 <item name="class" xsi:type="string">primary baulk_aramex_shipment</item>

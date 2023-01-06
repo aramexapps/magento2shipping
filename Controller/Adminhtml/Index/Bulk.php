@@ -298,13 +298,13 @@ class Bulk extends \Magento\Backend\App\Action
                 $post['aramex_shipment_referer'] = 0;
 
                 $replay = $this->postAction($orderItem['method'], $post);
-                if ($replay[1] == "DOM") {
+                if (is_array($replay) && isset($replay[1]) && $replay[1] == "DOM") {
                     $method = "Domestic Product Group";
                 } else {
                     $method = "International Product Group";
                 }
 
-                if ($replay[2] == "error") {
+                if (is_array($replay) && isset($replay[2]) && $replay[2] == "error") {
                     $responce .= "<p class='aramex_red'>" . $replay[0] . " - " .
                         $orderItem['order_id'] . ' not created. (' . $method . ')</p>';
                     break;
