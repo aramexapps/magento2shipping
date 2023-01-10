@@ -1,5 +1,4 @@
 <?php
-
 /**
 Description:  Aramex Shipping Magento2 plugin
 Version:      1.0.0
@@ -8,7 +7,6 @@ Author URI:   https://www.aramex.com/solutions-services/developers-solutions-cen
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  */
-
 namespace Aramex\Shipping\Controller\Adminhtml\Index;
 
 use Magento\Framework\Controller\ResultFactory;
@@ -154,10 +152,10 @@ class Bulk extends \Magento\Backend\App\Action
             'aramex/settings/account_country_code',
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
-
+       
         //check "pending" status
         $orders = $this->getOrdersWithPendingStatus($post_out, $post);
-
+ 
         //domestic metods must be first
         if (!empty($orders)) {
             $responce = "";
@@ -181,12 +179,13 @@ class Bulk extends \Magento\Backend\App\Action
 
                     $post[$itemvv->getId()] = (string) $_qty;
                 }
-
+             
                 $post['aramex_items'] = $this->getTotalItems($itemsv, $isShipped);
                 $post['order_weight'] = (string) $totalWeight;
                 $post['aramex_shipment_shipper_reference'] = $order->getIncrementId();
                 $post['aramex_shipment_info_billing_account'] = 1;
-                $post['aramex_shipment_shipper_account'] = $this->scopeConfig->getValue(
+                $post['aramex_shipment_shipper_account'] = $this->scopeConfig->
+                    getValue(
                         'aramex/settings/account_number',
                         \Magento\Store\Model\ScopeInterface::SCOPE_STORE
                     );
@@ -202,7 +201,8 @@ class Bulk extends \Magento\Backend\App\Action
                     'aramex/shipperdetail/state',
                     \Magento\Store\Model\ScopeInterface::SCOPE_STORE
                 );
-                $post['aramex_shipment_shipper_postal'] = $this->scopeConfig->getValue(
+                $post['aramex_shipment_shipper_postal'] = $this->scopeConfig->
+                    getValue(
                         'aramex/shipperdetail/postalcode',
                         \Magento\Store\Model\ScopeInterface::SCOPE_STORE
                     );
@@ -239,7 +239,7 @@ class Bulk extends \Magento\Backend\App\Action
                 $company_name = (empty($company_name) and $shipping) ? $shipping->getName() : $company_name;
                 $company_name = ($shipping) ? $shipping->getData('company') : '';
 
-                $post['aramex_shipment_receiver_company'] = (!empty($company_name)) ? $company_name :
+                $post['aramex_shipment_receiver_company'] = (!empty($company_name))? $company_name :
                     $post['aramex_shipment_receiver_name'];
                 $post['aramex_shipment_receiver_phone'] = ($shipping) ? $shipping->getData('telephone') : '';
                 $post['aramex_shipment_receiver_email'] =  $order->getData('customer_email');
@@ -281,29 +281,31 @@ class Bulk extends \Magento\Backend\App\Action
 
                 $orderPaymentStatus = false;
                 foreach ($order->getStatusHistoryCollection() as $status) {
-                    if ($status->getComment()) {
-                        if ((strpos($status->getComment(), 'Paid and ready for Aramex shipment')) === 0) {
-                            $orderPaymentStatus = true;
-                        }
+                            if ($status->getComment()) {
+                                if ((strpos($status->getComment(), 'Paid and ready for Aramex shipment')) === 0) {
+                                        $orderPaymentStatus = true;
+                                }
+                            }
                     }
-                }
-
-                if ($orderPaymentStatus) {
+                
+                if($orderPaymentStatus) {
                     $post['aramex_shipment_info_cod_amount'] = 0;
                 } else {
-                    $post['aramex_shipment_info_cod_amount'] = ($order->getPayment()->getMethodInstance()->getCode() != 'ccsave') ? (string) round($order->getData('grand_total'), 2) : '';
+                    $post['aramex_shipment_info_cod_amount'] = ($order->getPayment()->getMethodInstance()->
+                            getCode() != 'ccsave') ? (string) round($order->getData('grand_total'), 2) : '';
                 }
 
                 $post['aramex_return_shipment_creation_date'] = "create";
                 $post['aramex_shipment_referer'] = 0;
 
                 $replay = $this->postAction($orderItem['method'], $post);
+
                 if (is_array($replay) && isset($replay[1]) && $replay[1] == "DOM") {
                     $method = "Domestic Product Group";
                 } else {
                     $method = "International Product Group";
                 }
-
+                
                 if (is_array($replay) && isset($replay[2]) && $replay[2] == "error") {
                     $responce .= "<p class='aramex_red'>" . $replay[0] . " - " .
                         $orderItem['order_id'] . ' not created. (' . $method . ')</p>';
@@ -319,7 +321,7 @@ class Bulk extends \Magento\Backend\App\Action
             return  $this->resultJsonFactory->create()->setData(['Test-Message' => $errors]);
         }
     }
-
+    
     /**
      * Makes request to "Aramex shipment" API
      *
@@ -333,12 +335,12 @@ class Bulk extends \Magento\Backend\App\Action
         $baseUrl = $this->helper->getWsdlPath();
         //SOAP object
         $soapClient = $this->soapClientFactory->create($baseUrl .
-            'shipping.wsdl', ['version' => SOAP_1_1, 'trace' => 1, 'keep_alive' => false]);
+                    'shipping.wsdl', ['version' => SOAP_1_1,'trace' => 1, 'keep_alive' => false]);
         $aramex_errors = false;
         $errors = [];
         try {
             /* here's your form processing */
-            $order_id = $this->getRequest()->getParam('order_id');
+			$order_id= $this->getRequest()->getParam('order_id');
             $order = $this->order->load($order_id);
             $major_par = $this->getParameters($order, $post);
 
@@ -349,14 +351,15 @@ class Bulk extends \Magento\Backend\App\Action
                     $errors = $this->getErrorsText($auth_call);
                     return ([$errors, $method, 'error']);
                 } else {
-                    $data = [
+					$data = [
                         'items' => $post['aramex_items'],
-                        'comment_text' => "Aramex Shipment Order AWB No. " . $auth_call->Shipments->ProcessedShipment->ID . " - Order No. " . $order->getId() .
-                            " <a style='color:red;'>Print Label #"  . $auth_call->Shipments->ProcessedShipment->ID . "</a>",
+                        'comment_text' => "Aramex Shipment Order AWB No. " . $auth_call->Shipments->ProcessedShipment->
+                        ID . " - Order No. " . $order->getId() .
+                        " <a style='color:red;'>Print Label #"  . $auth_call->Shipments->ProcessedShipment->ID ."</a>",
                         'comment_customer_notify' => true,
                         'is_visible_on_front' => true
                     ];
-
+                    
                     if ($order->canShip() && $post['aramex_return_shipment_creation_date'] == "create") {
                         $this->shipmentLoader->setOrderId($order->getId());
                         $this->shipmentLoader->setShipmentId(null);
@@ -377,7 +380,7 @@ class Bulk extends \Magento\Backend\App\Action
                             )->setTitle(
                                 "Aramex Shipping"
                             );
-                            $shipment->addTrack($track);
+                                        $shipment->addTrack($track);
                         }
                         if (!empty($data['comment_text'])) {
                             $shipment->addComment(
@@ -416,7 +419,7 @@ class Bulk extends \Magento\Backend\App\Action
             return [$errors, $method, 'error'];
         }
     }
-
+    
     /**
      * Saves Aramex shipment
      *
@@ -434,7 +437,7 @@ class Bulk extends \Magento\Backend\App\Action
         )->save();
         $this->registry->unregister('current_shipment');
     }
-
+    
     /**
      * Gets Aramex orders
      *
@@ -462,7 +465,7 @@ class Bulk extends \Magento\Backend\App\Action
                 $awbno = strstr($_history, "- Order No", true);
             }
         }
-        /*if ($order->getStatus() == "pending" && !isset($awbno)) {*/
+ /*if ($order->getStatus() == "pending" && !isset($awbno)) {*/
         if ($order->getStatus() && !isset($awbno)) {
             $shipping = $order->getShippingAddress();
             $shippingCountry = ($shipping) ? $shipping->getData('country_id') : '';
@@ -471,11 +474,11 @@ class Bulk extends \Magento\Backend\App\Action
             } else {
                 $orderData[$key]['method'] = "EXP";
             }
-            $orderData[$key]['order_id'] = $order_id;
+            $orderData [$key]['order_id'] = $order_id;
         }
         return $orderData;
     }
-
+    
     /**
      * Gets orders with pending status
      *
@@ -521,7 +524,7 @@ class Bulk extends \Magento\Backend\App\Action
         }
         return $orders;
     }
-
+    
     /**
      * Gets quantity of ordered products in order
      *
@@ -542,7 +545,7 @@ class Bulk extends \Magento\Backend\App\Action
         }
         return $post;
     }
-
+    
     /**
      * Gets total weight of order
      *
@@ -558,7 +561,7 @@ class Bulk extends \Magento\Backend\App\Action
         }
         return $weight;
     }
-
+    
     /**
      * Gets description of shipment
      *
@@ -574,9 +577,9 @@ class Bulk extends \Magento\Backend\App\Action
                     trim($itemname->getName());
             }
         }
-        return $aramex_shipment_description;
+                return $aramex_shipment_description;
     }
-
+    
     /**
      * Gets errors description
      *
@@ -604,12 +607,14 @@ class Bulk extends \Magento\Backend\App\Action
                 }
                 $errors = $notification_string;
             } else {
-                $errors = 'Aramex: ' . $auth_call->Shipments->ProcessedShipment->Notifications->Notification->Code . ' - ' . $auth_call->Shipments->ProcessedShipment->Notifications->Notification->Message;
+                $errors = 'Aramex: ' . $auth_call->Shipments->ProcessedShipment->Notifications->
+                    Notification->Code . ' - ' . $auth_call->Shipments->ProcessedShipment->
+                    Notifications->Notification->Message;
             }
         }
-        return $errors;
+                    return $errors;
     }
-
+    
     /**
      * Gets errors description
      *
@@ -619,19 +624,19 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private function sendEmail($order, $auth_call)
     {
-        /* send shipment mail */
-        $storeId = $order->getStore()->getId();
-        $copyTo = $this->helper->getEmails(self::XML_PATH_SHIPMENT_EMAIL_COPY_TO, $storeId);
-        $copyMethod = $this->scopeConfig->getValue(
-            self::XML_PATH_SHIPMENT_EMAIL_COPY_METHOD,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-        $templateId = $this->scopeConfig->getValue(
-            self::XML_PATH_SHIPMENT_EMAIL_TEMPLATE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
+                            /* send shipment mail */
+                                $storeId = $order->getStore()->getId();
+                            $copyTo = $this->helper->getEmails(self:: XML_PATH_SHIPMENT_EMAIL_COPY_TO, $storeId);
+                            $copyMethod = $this->scopeConfig->getValue(
+                                self::XML_PATH_SHIPMENT_EMAIL_COPY_METHOD,
+                                \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                                $storeId
+                            );
+                            $templateId = $this->scopeConfig->getValue(
+                                self::XML_PATH_SHIPMENT_EMAIL_TEMPLATE,
+                                \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+                                $storeId
+                            );
 
         if ($order->getCustomerIsGuest()) {
             $customerName = $order->getBillingAddress()->getName();
@@ -639,47 +644,43 @@ class Bulk extends \Magento\Backend\App\Action
             $customerName = $order->getCustomerName();
         }
 
-        $shipments_id = $auth_call->Shipments->ProcessedShipment->ID;
-        $templateParams = [
-            'order' => $order,
-            'customerName' => $customerName,
-            'shipments_id' => $shipments_id
-        ];
-        $senderName = $this->scopeConfig->getValue(self::XML_PATH_TRANS_IDENTITY_NAME);
-        $senderEmail = $this->scopeConfig->getValue(self::XML_PATH_TRANS_IDENTITY_EMAIL);
+                            $shipments_id = $auth_call->Shipments->ProcessedShipment->ID;
+                            $templateParams = [
+                                    'order' => $order,
+                                    'customerName' => $customerName,
+                                    'shipments_id' => $shipments_id
+                                ];
+                            $senderName = $this->scopeConfig->getValue(self::XML_PATH_TRANS_IDENTITY_NAME);
+                            $senderEmail = $this->scopeConfig->getValue(self::XML_PATH_TRANS_IDENTITY_EMAIL);
 
-        if ($copyTo && $copyMethod == 'bcc') {
-            $transport = $this->transportBuilder->setTemplateIdentifier($templateId)
-                ->setTemplateOptions([
-                    'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                    'store' => $storeId
-                ])
-                ->setTemplateVars($templateParams)
-                ->setFrom(['name' => $senderName, 'email' => $senderEmail])
-                ->addTo($order->getCustomerEmail(), $customerName)
-                ->addBcc($copyTo)
-                ->getTransport();
-        }
-        if ($copyTo && $copyMethod == 'copy') {
-            $transport = $this->transportBuilder->setTemplateIdentifier($templateId)
-                ->setTemplateOptions([
-                    'area' => \Magento\Framework\App\Area::AREA_FRONTEND,
-                    'store' => $storeId
-                ])
-                ->setTemplateVars($templateParams)
-                ->setFrom(['name' => $senderName, 'email' => $senderEmail])
-                ->addTo($order->getCustomerEmail(), $customerName)
-                ->addBcc($copyTo)
-                ->getTransport();
-        }
-
-        try {
-            $transport->sendMessage();
-        } catch (\Exception $ex) {
-            $this->messageManager->addError('Unable to send email');
-        }
+                            if ($copyTo && $copyMethod == 'bcc') {
+                                $transport = $this->transportBuilder->setTemplateIdentifier($templateId)
+                                            ->setTemplateOptions(['area' => \Magento\Framework\App\Area::AREA_FRONTEND,
+                                                'store' => $storeId])
+                                            ->setTemplateVars($templateParams)
+                                            ->setFrom(['name' => $senderName, 'email' => $senderEmail])
+                                            ->addTo($order->getCustomerEmail(), $customerName)
+                                            ->addBcc($copyTo)
+                                            ->getTransport();
+                            }
+                            if ($copyTo && $copyMethod == 'copy') {
+                                $transport = $this->transportBuilder->setTemplateIdentifier($templateId)
+                                            ->setTemplateOptions(['area' => \Magento\Framework\App\Area::AREA_FRONTEND,
+                                                'store' => $storeId])
+                                            ->setTemplateVars($templateParams)
+                                            ->setFrom(['name' => $senderName, 'email' => $senderEmail])
+                                            ->addTo($order->getCustomerEmail(), $customerName)
+                                            ->addBcc($copyTo)
+                                            ->getTransport();
+                            }
+                            
+                            try {
+                                $transport->sendMessage();
+                            } catch (\Exception $ex) {
+                                $this->messageManager->addError('Unable to send email');
+                            }
     }
-
+    
     /**
      * Creates array with parameters for request to Aramex server
      *
@@ -689,13 +690,13 @@ class Bulk extends \Magento\Backend\App\Action
      */
     private function getParameters($order, $post)
     {
-        $totalItems = 0;
-        $items = $order->getAllItems();
-        $descriptionOfGoods = '';
+            $totalItems = 0;
+            $items = $order->getAllItems();
+            $descriptionOfGoods = '';
         foreach ($order->getAllVisibleItems() as $itemname) {
             $descriptionOfGoods .= $itemname->getId() . ' - ' . trim($itemname->getName());
         }
-        $aramex_items_counter = 0;
+            $aramex_items_counter = 0;
         foreach ($post['aramex_items'] as $key => $value) {
             $aramex_items_counter++;
             if ($value != 0) {
@@ -725,130 +726,130 @@ class Bulk extends \Magento\Backend\App\Action
             }
         }
 
-        $totalWeight = $post['order_weight'];
-        $params = [];
-        //shipper parameters
-        $params['Shipper'] = [
-            'Reference1' => $post['aramex_shipment_shipper_reference'],
-            'Reference2' => '',
-            'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 1) ?
+            $totalWeight = $post['order_weight'];
+            $params = [];
+           //shipper parameters
+            $params['Shipper'] = [
+                'Reference1' => $post['aramex_shipment_shipper_reference'],
+                'Reference2' => '',
+                'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 1) ?
                 $post['aramex_shipment_shipper_account'] : $post['aramex_shipment_shipper_account'],
-            //Party Address
-            'PartyAddress' => [
-                'Line1' => $post['aramex_shipment_shipper_street'],
-                'Line2' => '',
-                'Line3' => '',
-                'City' => $post['aramex_shipment_shipper_city'],
-                'StateOrProvinceCode' => $post['aramex_shipment_shipper_state'],
-                'PostCode' => $post['aramex_shipment_shipper_postal'],
-                'CountryCode' => $post['aramex_shipment_shipper_country'],
-            ],
-            //Contact Info
-            'Contact' => [
-                'Department' => '',
-                'PersonName' => $post['aramex_shipment_shipper_name'],
-                'Title' => '',
-                'CompanyName' => $post['aramex_shipment_shipper_company'],
-                'PhoneNumber1' => $post['aramex_shipment_shipper_phone'],
-                'PhoneNumber1Ext' => '',
-                'PhoneNumber2' => '',
-                'PhoneNumber2Ext' => '',
-                'FaxNumber' => '',
-                'CellPhone' => $post['aramex_shipment_shipper_phone'],
-                'EmailAddress' => $post['aramex_shipment_shipper_email'],
-                'Type' => ''
-            ],
-        ];
-        //consinee parameters
-        $params['Consignee'] = [
-            'Reference1' => $post['aramex_shipment_receiver_reference'],
-            'Reference2' => '',
-            'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 2) ?
+                //Party Address
+                'PartyAddress' => [
+                    'Line1' => $post['aramex_shipment_shipper_street'],
+                    'Line2' => '',
+                    'Line3' => '',
+                    'City' => $post['aramex_shipment_shipper_city'],
+                    'StateOrProvinceCode' => $post['aramex_shipment_shipper_state'],
+                    'PostCode' => $post['aramex_shipment_shipper_postal'],
+                    'CountryCode' => $post['aramex_shipment_shipper_country'],
+                ],
+                //Contact Info
+                'Contact' => [
+                    'Department' => '',
+                    'PersonName' => $post['aramex_shipment_shipper_name'],
+                    'Title' => '',
+                    'CompanyName' => $post['aramex_shipment_shipper_company'],
+                    'PhoneNumber1' => $post['aramex_shipment_shipper_phone'],
+                    'PhoneNumber1Ext' => '',
+                    'PhoneNumber2' => '',
+                    'PhoneNumber2Ext' => '',
+                    'FaxNumber' => '',
+                    'CellPhone' => $post['aramex_shipment_shipper_phone'],
+                    'EmailAddress' => $post['aramex_shipment_shipper_email'],
+                    'Type' => ''
+                ],
+            ];
+            //consinee parameters
+            $params['Consignee'] = [
+                'Reference1' => $post['aramex_shipment_receiver_reference'],
+                'Reference2' => '',
+                'AccountNumber' => ($post['aramex_shipment_info_billing_account'] == 2) ?
                 $post['aramex_shipment_shipper_account'] : '',
-            //Party Address
-            'PartyAddress' => [
-                'Line1' => $post['aramex_shipment_receiver_street'],
-                'Line2' => '',
-                'Line3' => '',
-                'City' => $post['aramex_shipment_receiver_city'],
-                'StateOrProvinceCode' => '',
-                'PostCode' => $post['aramex_shipment_receiver_postal'],
-                'CountryCode' => $post['aramex_shipment_receiver_country'],
-            ],
-            //Contact Info
-            'Contact' => [
-                'Department' => '',
-                'PersonName' => $post['aramex_shipment_receiver_name'],
-                'Title' => '',
-                'CompanyName' => $post['aramex_shipment_receiver_company'],
-                'PhoneNumber1' => $post['aramex_shipment_receiver_phone'],
-                'PhoneNumber1Ext' => '',
-                'PhoneNumber2' => '',
-                'PhoneNumber2Ext' => '',
-                'FaxNumber' => '',
-                'CellPhone' => $post['aramex_shipment_receiver_phone'],
-                'EmailAddress' => $post['aramex_shipment_receiver_email'],
-                'Type' => ''
-            ]
-        ];
+                //Party Address
+                'PartyAddress' => [
+                    'Line1' => $post['aramex_shipment_receiver_street'],
+                    'Line2' => '',
+                    'Line3' => '',
+                    'City' => $post['aramex_shipment_receiver_city'],
+                    'StateOrProvinceCode' => '',
+                    'PostCode' => $post['aramex_shipment_receiver_postal'],
+                    'CountryCode' => $post['aramex_shipment_receiver_country'],
+                ],
+                //Contact Info
+                'Contact' => [
+                    'Department' => '',
+                    'PersonName' => $post['aramex_shipment_receiver_name'],
+                    'Title' => '',
+                    'CompanyName' => $post['aramex_shipment_receiver_company'],
+                    'PhoneNumber1' => $post['aramex_shipment_receiver_phone'],
+                    'PhoneNumber1Ext' => '',
+                    'PhoneNumber2' => '',
+                    'PhoneNumber2Ext' => '',
+                    'FaxNumber' => '',
+                    'CellPhone' => $post['aramex_shipment_receiver_phone'],
+                    'EmailAddress' => $post['aramex_shipment_receiver_email'],
+                    'Type' => ''
+                ]
+            ];
 
-        // Other Main Shipment Parameters
-        $params['Reference1'] = $post['aramex_shipment_info_reference'];
-        $params['Reference2'] = '';
-        $params['Reference3'] = '';
-        $params['ForeignHAWB'] = $post['aramex_shipment_info_foreignhawb'];
+            // Other Main Shipment Parameters
+            $params['Reference1'] = $post['aramex_shipment_info_reference'];
+            $params['Reference2'] = '';
+            $params['Reference3'] = '';
+            $params['ForeignHAWB'] = $post['aramex_shipment_info_foreignhawb'];
 
-        $params['TransportType'] = 0;
-        $params['ShippingDateTime'] = time();
-        $params['DueDate'] = time() + (7 * 24 * 60 * 60);
-        $params['PickupLocation'] = 'Reception';
-        $params['PickupGUID'] = '';
-        $params['Comments'] = $post['aramex_shipment_info_comment'];
-        $params['AccountingInstrcutions'] = '';
-        $params['OperationsInstructions'] = '';
-        $params['Details'] = [
-            'Dimensions' => [
-                'Length' => '0',
-                'Width' => '0',
-                'Height' => '0',
-                'Unit' => 'cm'
-            ],
-            'ActualWeight' => [
-                'Value' => $totalWeight,
-                'Unit' => $post['weight_unit']
-            ],
-            'ProductGroup' => $post['aramex_shipment_info_product_group'],
-            'ProductType' => $post['aramex_shipment_info_product_type'],
-            'PaymentType' => $post['aramex_shipment_info_payment_type'],
-            'PaymentOptions' => $post['aramex_shipment_info_payment_option'],
-            'Services' => $post['aramex_shipment_info_service_type'],
-            'NumberOfPieces' => $totalItems,
-            'DescriptionOfGoods' => (trim($post['aramex_shipment_description']) == '') ?
+            $params['TransportType'] = 0;
+            $params['ShippingDateTime'] = time();
+            $params['DueDate'] = time() + (7 * 24 * 60 * 60);
+            $params['PickupLocation'] = 'Reception';
+            $params['PickupGUID'] = '';
+            $params['Comments'] = $post['aramex_shipment_info_comment'];
+            $params['AccountingInstrcutions'] = '';
+            $params['OperationsInstructions'] = '';
+            $params['Details'] = [
+                'Dimensions' => [
+                    'Length' => '0',
+                    'Width' => '0',
+                    'Height' => '0',
+                    'Unit' => 'cm'
+                ],
+                'ActualWeight' => [
+                    'Value' => $totalWeight,
+                    'Unit' => $post['weight_unit']
+                ],
+                'ProductGroup' => $post['aramex_shipment_info_product_group'],
+                'ProductType' => $post['aramex_shipment_info_product_type'],
+                'PaymentType' => $post['aramex_shipment_info_payment_type'],
+                'PaymentOptions' => $post['aramex_shipment_info_payment_option'],
+                'Services' => $post['aramex_shipment_info_service_type'],
+                'NumberOfPieces' => $totalItems,
+                'DescriptionOfGoods' => (trim($post['aramex_shipment_description']) == '') ?
                 $descriptionOfGoods : $post['aramex_shipment_description'],
-            'GoodsOriginCountry' => $post['aramex_shipment_shipper_country'],
-            'Items' => $aramex_items,
-        ];
+                'GoodsOriginCountry' => $post['aramex_shipment_shipper_country'],
+                'Items' => $aramex_items,
+            ];
 
-        $params['Details']['CashOnDeliveryAmount'] = [
-            'Value' => $post['aramex_shipment_info_cod_amount'],
-            'CurrencyCode' => $post['aramex_shipment_currency_code']
-        ];
+            $params['Details']['CashOnDeliveryAmount'] = [
+                'Value' => $post['aramex_shipment_info_cod_amount'],
+                'CurrencyCode' => $post['aramex_shipment_currency_code']
+            ];
 
-        $params['Details']['CustomsValueAmount'] = [
-            'Value' => $post['aramex_shipment_info_custom_amount'],
-            'CurrencyCode' => $post['aramex_shipment_currency_code']
-        ];
+            $params['Details']['CustomsValueAmount'] = [
+                'Value' => $post['aramex_shipment_info_custom_amount'],
+                'CurrencyCode' => $post['aramex_shipment_currency_code']
+            ];
 
-        $major_par['Shipments'][] = $params;
-        $clientInfo = $this->helper->getClientInfo();
-        $major_par['ClientInfo'] = $clientInfo;
-        $major_par['LabelInfo'] = [
-            'ReportID' => 9729,
-            'ReportType' => 'URL'
-        ];
-        return $major_par;
+            $major_par['Shipments'][] = $params;
+            $clientInfo = $this->helper->getClientInfo();
+            $major_par['ClientInfo'] = $clientInfo;
+            $major_par['LabelInfo'] = [
+                'ReportID' => 9729,
+                'ReportType' => 'URL'
+            ];
+            return $major_par;
     }
-
+    
     /**
      * Transforms string to array
      *
