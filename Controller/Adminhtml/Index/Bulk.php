@@ -288,12 +288,16 @@ class Bulk extends \Magento\Backend\App\Action
                             }
                     }
                 
-                if($orderPaymentStatus) {
-                    $post['aramex_shipment_info_cod_amount'] = 0;
-                } else {
-                    $post['aramex_shipment_info_cod_amount'] = ($order->getPayment()->getMethodInstance()->
-                            getCode() != 'ccsave') ? (string) round($order->getData('grand_total'), 2) : '';
-                }
+                    if($orderPaymentStatus) {
+                        $post['aramex_shipment_info_cod_amount'] = 0;
+                    } else {
+                        if($params['aramex_shipment_info_service_type_dom'] == 'CODS' || $params['aramex_shipment_info_service_type'] == 'CODS') {
+                            $post['aramex_shipment_info_cod_amount'] = ($order->getPayment()->getMethodInstance()->
+                                getCode() != 'ccsave') ? (string) round($order->getData('grand_total'), 2) : '';
+                        } else {
+                            $post['aramex_shipment_info_cod_amount'] = 0;
+                        }
+                    }
 
                 $post['aramex_return_shipment_creation_date'] = "create";
                 $post['aramex_shipment_referer'] = 0;
